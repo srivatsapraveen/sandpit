@@ -2,26 +2,30 @@
     ViewData["Title"] = "Home Page";
 }
 
-<div class="row">
-    <div class="col-md-8 mt-2">
-        <video id="gum-local" autoplay playsinline style="background-color:black;height:365px;width:100%"></video>
-        <button id="showVideo" onclick="init()">Open camera</button>
-        <div id="errorMsg"></div>
-    </div>
-    <div class="col-md-4 mt-2">
-        <div>
-            <div class="input-group mb-3">
-                <input type="text" class="form-control" placeholder="Type a message" id="messageInput" >
-                <div class="input-group-append">
-                    <button class="btn btn-outline-secondary" type="button" id="sendButton">Send</button>
+    <div class="row">
+        <div class="col-md-8 mt-2">
+            <video id="vid01" class="mt-2 ml-2" autoplay playsinline style="background-color:gray;height:80px;width:120px;position:absolute"></video>
+            <video id="vid02" class="mt-2 ml-2" autoplay playsinline style="background-color:gray;height:80px;width:120px;position:absolute;top:100px"></video>
+            <video id="vid03" autoplay playsinline style="background-color:black;height:370px;width:100%"></video>
+
+            <button id="showVideo" onclick="init()">Open camera</button>
+            <div id="errorMsg"></div>
+        </div>
+        
+        <div class="col-md-4 mt-2">
+            <div>
+                <div class="input-group mb-3">
+                    <input type="text" class="form-control" placeholder="Type a message" id="messageInput">
+                    <div class="input-group-append">
+                        <button class="btn btn-outline-secondary" type="button" id="sendButton">Send</button>
+                    </div>
                 </div>
             </div>
-        </div>
-        <div class="bg-light pt-4" style="height:310px;overflow-y:scroll">
-            <ul id="messagesList" class="pr-2"></ul>
+            <div class="bg-light pt-4" style="height: 310px; overflow-y: scroll">
+                <ul id="messagesList" class="pr-2"></ul>
+            </div>
         </div>
     </div>
-</div>
-<input class="mytext" id="roomInput" style="display:none" value="@ViewBag.RoomID" />
+<input class="mytext" id="roomInput" style="display: none" value="@ViewBag.RoomID" />
 <input class="mytext" id="userInput" style="display:none" value="@ViewBag.UserID" />
 <script src="~/js/Chat.js"></script>

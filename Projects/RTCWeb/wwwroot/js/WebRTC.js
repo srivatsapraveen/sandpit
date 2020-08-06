@@ -5,7 +5,7 @@ const constraints = window.constraints = {
 };
 
 function handleSuccess(stream) {
-    const video = document.querySelector('video');
+    const video = document.querySelector('#vid01');
     const videoTracks = stream.getVideoTracks();
     console.log('Got stream with constraints:', constraints);
     console.log('Using video device: ${videoTracks[0].label}');
