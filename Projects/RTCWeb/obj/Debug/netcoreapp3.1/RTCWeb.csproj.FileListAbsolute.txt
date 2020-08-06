@@ -352,3 +352,4 @@ C:\Rubix-Works\Source\srivatsapraveen\sandpit\Projects\RTCWeb\obj\Debug\netcorea
 C:\Rubix-Works\Source\srivatsapraveen\sandpit\Projects\RTCWeb\obj\Debug\netcoreapp3.1\RTCWeb.MvcApplicationPartsAssemblyInfo.cs
 C:\Rubix-Works\Source\srivatsapraveen\sandpit\Projects\RTCWeb\obj\Debug\netcoreapp3.1\RTCWeb.MvcApplicationPartsAssemblyInfo.cache
 C:\Rubix-Works\Source\srivatsapraveen\sandpit\Projects\RTCWeb\bin\Debug\netcoreapp3.1\libman.json
+C:\Rubix-Works\Source\srivatsapraveen\sandpit\Projects\RTCWeb\obj\Debug\netcoreapp3.1\RTCWeb.csprojAssemblyReference.cache

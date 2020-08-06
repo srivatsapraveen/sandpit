@@ -11,7 +11,7 @@ function handleSuccess(stream) {
     console.log('Using video device: ${videoTracks[0].label}');
     //window.stream = stream; // make variable available to browser console
     video.srcObject = stream;
-    video.width = 730; video.height = 400;    
+    //video.width = "100%"; video.height = 400;    
 }
 
 function handleError(error) {
