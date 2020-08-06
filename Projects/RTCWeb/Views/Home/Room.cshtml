@@ -1,0 +1,23 @@
+﻿@{
+    ViewData["Title"] = "Home Page";
+}
+
+<div class="row">
+    <div class="col-md-8">
+        <video id="gum-local" autoplay playsinline style="background-color:black;width:100%;"></video>
+        <button id="showVideo" onclick="init()">Open camera</button>
+        <div id="errorMsg"></div>
+    </div>
+    <div class="col-md-4">
+        <div style="position:absolute;top:0;height:90%;width:100%" class="bg-light pt-0">
+            <ul id="messagesList" class="pr-2"></ul>
+        </div>
+        <div style="position:absolute;bottom:0;width:100%">
+            <input class="mytext" placeholder="Type a message" style="width:85%" id="messageInput" />
+            <button type="button" class="btn btn-sm btn-primary" id="sendButton">Send</button>
+        </div>
+    </div>
+</div>
+<input class="mytext" id="roomInput" style="display:none" value="@ViewBag.RoomID" />
+<input class="mytext" id="userInput" style="display:none" value="@ViewBag.UserID" />
+<script src="~/js/Chat.js"></script>

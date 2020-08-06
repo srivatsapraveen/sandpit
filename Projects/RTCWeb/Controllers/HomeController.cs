@@ -20,6 +20,15 @@ namespace RTCWeb.Controllers
 
         public IActionResult Index()
         {
+            ViewBag.RoomID = "";
+            ViewBag.UserID = "";
+            return View();
+        }
+
+        public IActionResult Room(string roomid, string userid)
+        {
+            ViewBag.RoomID = roomid;
+            ViewBag.UserID = userid;
             return View();
         }
 
