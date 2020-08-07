@@ -44,4 +44,33 @@ async function init(e) {
     }
 }
 
-//document.querySelector('#showVideo').addEventListener('click', e => init(e));
+async function initPeer(e) {
+    try {
+        var peerConnectionConfig = { "iceServers": [{ "url": "stun:stun.l.google.com:19302" }] };
+        //    "iceServers": [
+        //        { "urls": "stun:stun.l.google.com:19302?transport=udp" },
+        //        { "urls": "stun:numb.viagenie.ca:3478?transport=udp" },
+        //        { "urls": "turn:numb.viagenie.ca:3478?transport=udp", "username": "shahzad@fms-tech.com", "credential": "P@ssw0rdfms" },
+        //        { "urls": "turn:turn-testdrive.cloudapp.net:3478?transport=udp", "username": "redmond", "credential": "redmond123" }
+        //    ]
+        //};
+
+        var RTCconnection = new RTCPeerConnection(peerConnectionConfig);
+        //const stream = await navigator.mediaDevices.getUserMedia(constraints);
+        RTCconnection.addStream(stream);
+
+        RTCconnection.createOffer().then(offer => {
+            console.log('WebRTC: created Offer: ');
+            console.log('WebRTC: Description after offer: ', offer);
+            RTCconnection.setLocalDescription(offer).then(() => {
+                console.log('WebRTC: set Local Description: ');
+                console.log('connection before sending offer ', RTCconnection);
+                setTimeout(() => {
+                    sendHubSignal(JSON.stringify({ "sdp": RTCconnection.localDescription }));
+                }, 1000);
+            }).catch(err => console.error('WebRTC: Error while setting local description', err));
+        }).catch(err => console.error('WebRTC: Error while creating offer', err));
+    } catch (e) {
+        handleError(e);
+    }
+}
