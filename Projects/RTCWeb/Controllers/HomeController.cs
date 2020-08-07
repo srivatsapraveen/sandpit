@@ -25,6 +25,20 @@ namespace RTCWeb.Controllers
             return View();
         }
 
+        public IActionResult Test(string roomid, string userid)
+        {
+            ViewBag.RoomID = roomid;
+            ViewBag.UserID = userid;
+            return View();
+        }
+
+        public IActionResult Chat(string roomid, string userid)
+        {
+            ViewBag.RoomID = roomid;
+            ViewBag.UserID = userid;
+            return View();
+        }
+
         public IActionResult Room(string roomid, string userid)
         {
             ViewBag.RoomID = roomid;

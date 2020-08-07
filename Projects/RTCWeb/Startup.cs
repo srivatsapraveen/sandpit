@@ -54,6 +54,7 @@ namespace RTCWeb
                     name: "default",
                     pattern: "{controller=Home}/{action=Index}/{id?}");
                 endpoints.MapHub<ChatHub>("/chathub");
+                endpoints.MapHub<RTCHub>("/rtchub");
             });
         }
     }

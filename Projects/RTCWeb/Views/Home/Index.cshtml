@@ -7,7 +7,7 @@
         <h1>WebRTC Video Chatroom</h1>
         
         <div>
-            <form action="/home/room" method="post">
+            <form method="post">
                 <p id="instructions" class="mb-0">Please enter a room name.</p>
                 <div id="room-id-input-div">
                     <input type="text" id="rid" value="12345" name="roomid">
@@ -19,7 +19,9 @@
                     <br />
                 </div>
                 <div id="input-buttons" class="mt-4">
-                    <button type="submit" value="Submit">JOIN ROOM</button>
+                    <button type="submit" value="Submit" formaction="/home/test">JOIN Test ROOM</button>
+                    <button type="submit" value="Submit" formaction="/home/chat">JOIN Chat ROOM</button>
+                    <button type="submit" value="Submit" formaction="/home/room">JOIN Video ROOM</button>
                 </div>
             </form>
             <label class="error-label hidden mt-4" for="user-id-input" id="user-id-input-label">Room/User name must be 5 or more characters and include only letters, numbers, underscore and hyphen.</label>
