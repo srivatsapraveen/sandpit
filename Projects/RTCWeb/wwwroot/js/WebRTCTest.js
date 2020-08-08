@@ -1,5 +1,6 @@
 ﻿'use strict';
 
+///////////////////////////////////////////////// INIT /////////////////////////////////
 const mediaStreamConstraints = {
     video: true, audio: false
 };
@@ -20,7 +21,7 @@ let remoteStream;
 let localPeerConnection;
 let remotePeerConnection;
 
-// Define MediaStreams callbacks.
+/////////////////////////////////////////////////MEDIA STREAM CALLBACKS/////////////////////////////////
 
 // Sets the MediaStream as the video element src.
 function gotLocalMediaStream(mediaStream) {
@@ -67,7 +68,7 @@ localVideo.addEventListener('loadedmetadata', logVideoLoaded);
 remoteVideo.addEventListener('loadedmetadata', logVideoLoaded);
 remoteVideo.addEventListener('onresize', logResizedVideo);
 
-// Define RTC peer connection behavior.
+/////////////////////////////////////////////////RTC PEER METHODS/////////////////////////////////
 
 // Connects with new peer candidate.
 function handleConnection(event) {
@@ -166,7 +167,7 @@ function createdAnswer(description) {
         }).catch(setSessionDescriptionError);
 }
 
-// Define and add behavior to buttons.
+/////////////////////////////////////////////////BUTTONS AND ACTION METHODS/////////////////////////////////
 
 // Define action buttons.
 const startButton = document.getElementById('startButton');

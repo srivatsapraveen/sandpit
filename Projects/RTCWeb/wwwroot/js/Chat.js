@@ -1,7 +1,8 @@
 ﻿"use strict";
 
-var room = document.getElementById("roomInput").value;
-var user = document.getElementById("userInput").value;
+//var room = document.getElementById("roomInput").value;
+//var user = document.getElementById("userInput").value;
+alert('User:' + user + ' in room:' + room);
 
 var input = document.getElementById("messageInput");
 // Execute a function when the user releases a key on the keyboard
