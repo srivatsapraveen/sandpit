@@ -47,6 +47,21 @@ function sendMessage(type,message) {
     });
 }
 
+connection.on("created", function (ucount) {
+    console.log('Created...' + ucount);
+    isInitiator = true;
+});
+
+connection.on("joined", function (ucount) {
+    console.log('Joined...' + ucount);
+    isChannelReady = true;
+
+});
+
+connection.on("disconnected", function (ucount) {
+    console.log('Disconnected...' + ucount);
+});
+
 connection.on("Receive", function (type, message) {
     console.log('Recieving...' + type);
     switch (type) {
