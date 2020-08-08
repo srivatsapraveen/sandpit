@@ -42,7 +42,7 @@ connection.start().then(function () {
 });
 
 function sendMessage(type, message) {
-    console.log('Client sending message: ', message);
+    console.log('Client sending (' + type + ')', message);
     connection.invoke("Send", type, message).catch(function (err) {
         return console.error(err.toString());
     });
