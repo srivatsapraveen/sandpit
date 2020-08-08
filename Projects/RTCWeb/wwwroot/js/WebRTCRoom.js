@@ -31,16 +31,17 @@ var sdpConstraints = {
     offerToReceiveVideo: true
 };
 
-/////////////////////////////////////////////////SIGNALR METHODS/////////////////////////////////
+/////////////////////////////////////////////////SIGNALR INIT METHODS/////////////////////////////////
 
 var connection = new signalR.HubConnectionBuilder().withUrl("/rtcHub").build();
 connection.start().then(function () {
     console.log('SignalR Connected Successfully');
+    InitWebRTC();
 }).catch(function (err) {
     return console.error(err.toString());
 });
 
-function sendMessage(type,message) {
+function sendMessage(type, message) {
     console.log('Client sending message: ', message);
     connection.invoke("Send", type, message).catch(function (err) {
         return console.error(err.toString());
@@ -111,19 +112,20 @@ connection.on("Receive", function (type, message) {
 
 
 /////////////////////////////////////////////////WEB RTC METHODS/////////////////////////////////
+function InitWebRTC() {
+    navigator.mediaDevices.getUserMedia({
+        audio: false,
+        video: true
+    })
+        .then(gotStream)
+        .catch(function (e) {
+            alert('getUserMedia() error: ' + e.name);
+        });
+}
 
 // Define peer connections, streams and video elements.
 const localVideo = document.getElementById('localVideo');
 const remoteVideo = document.getElementById('remoteVideo');
-
-navigator.mediaDevices.getUserMedia({
-    audio: false,
-    video: true
-})
-    .then(gotStream)
-    .catch(function (e) {
-        alert('getUserMedia() error: ' + e.name);
-    });
 
 function gotStream(stream) {
     console.log('Adding local stream.');
