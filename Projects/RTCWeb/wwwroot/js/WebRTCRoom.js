@@ -8,21 +8,21 @@ var pc;
 var remoteStream;
 var turnReady;
 
-/////////////////////////////////////////////////CONFIGS/////////////////////////////////
-//var pcConfig = {
-//    'iceServers': [{
-//        'urls': 'stun:stun.l.google.com:19302'
-//    }]
-//};
-
+///////////////////////////////////////////////CONFIGS/////////////////////////////////
 var pcConfig = {
-      'iceServers': [{ 
-        'urls': ['stun:bn-turn1.xirsys.com']
-      }, {
-        'username': 'IVNphUJyVB96xzqM4rHGMEPn2iQLgXc5WB_BQWw2uaH4lGUFRozFmFqnwow2aYeoAAAAAF8qu2ZuaWdpbg==', 'credential': 'f7bb5574-d723-11ea-9634-0242ac140004',
-         'urls': ['turn:bn-turn1.xirsys.com:80?transport=udp', 'turn:bn-turn1.xirsys.com:3478?transport=udp', 'turn:bn-turn1.xirsys.com:80?transport=tcp', 'turn:bn-turn1.xirsys.com:3478?transport=tcp', 'turns:bn-turn1.xirsys.com:443?transport=tcp', 'turns:bn-turn1.xirsys.com:5349?transport=tcp']
-      }]
+    'iceServers': [{
+        'urls': 'stun:stun.l.google.com:19302'
+    }]
 };
+
+//var pcConfig = {
+//      'iceServers': [{ 
+//        'urls': ['stun:bn-turn1.xirsys.com']
+//      }, {
+//        'username': 'IVNphUJyVB96xzqM4rHGMEPn2iQLgXc5WB_BQWw2uaH4lGUFRozFmFqnwow2aYeoAAAAAF8qu2ZuaWdpbg==', 'credential': 'f7bb5574-d723-11ea-9634-0242ac140004',
+//         'urls': ['turn:bn-turn1.xirsys.com:80?transport=udp', 'turn:bn-turn1.xirsys.com:3478?transport=udp', 'turn:bn-turn1.xirsys.com:80?transport=tcp', 'turn:bn-turn1.xirsys.com:3478?transport=tcp', 'turns:bn-turn1.xirsys.com:443?transport=tcp', 'turns:bn-turn1.xirsys.com:5349?transport=tcp']
+//      }]
+//};
 
 
 // Set up audio and video regardless of what devices are present.
@@ -239,38 +239,38 @@ function onCreateSessionDescriptionError(error) {
     trace('Failed to create session description: ' + error.toString());
 }
 
-function requestTurn(turnURL) {
-    turnReady = true;
-}
 //function requestTurn(turnURL) {
-//    var turnExists = false;
-//    for (var i in pcConfig.iceServers) {
-//        if (pcConfig.iceServers[i].urls.substr(0, 5) === 'turn:') {
-//            turnExists = true;
-//            turnReady = true;
-//            break;
-//        }
-//    }
-//    if (!turnExists) {
-//        alert('THIS SHOULD NEVER RUN IN THE REAL WORLD');
-//        console.log('Getting TURN server from ', turnURL);
-//        // No TURN server. Get one from computeengineondemand.appspot.com:
-//        var xhr = new XMLHttpRequest();
-//        xhr.onreadystatechange = function () {
-//            if (xhr.readyState === 4 && xhr.status === 200) {
-//                var turnServer = JSON.parse(xhr.responseText);
-//                console.log('Got TURN server: ', turnServer);
-//                pcConfig.iceServers.push({
-//                    'urls': 'turn:' + turnServer.username + '@' + turnServer.turn,
-//                    'credential': turnServer.password
-//                });
-//                turnReady = true;
-//            }
-//        };
-//        xhr.open('GET', turnURL, true);
-//        xhr.send();
-//    }
+//    turnReady = true;
 //}
+function requestTurn(turnURL) {
+    var turnExists = false;
+    for (var i in pcConfig.iceServers) {
+        if (pcConfig.iceServers[i].urls.substr(0, 5) === 'turn:') {
+            turnExists = true;
+            turnReady = true;
+            break;
+        }
+    }
+    if (!turnExists) {
+        //alert('THIS SHOULD NEVER RUN IN THE REAL WORLD');
+        console.log('Getting TURN server from ', turnURL);
+        // No TURN server. Get one from computeengineondemand.appspot.com:
+        var xhr = new XMLHttpRequest();
+        xhr.onreadystatechange = function () {
+            if (xhr.readyState === 4 && xhr.status === 200) {
+                var turnServer = JSON.parse(xhr.responseText);
+                console.log('Got TURN server: ', turnServer);
+                pcConfig.iceServers.push({
+                    'urls': 'turn:' + turnServer.username + '@' + turnServer.turn,
+                    'credential': turnServer.password
+                });
+                turnReady = true;
+            }
+        };
+        xhr.open('GET', turnURL, true);
+        xhr.send();
+    }
+}
 
 function handleRemoteStreamAdded(event) {
     console.log('Remote stream added.');
