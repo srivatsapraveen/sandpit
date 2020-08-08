@@ -10,6 +10,11 @@ namespace RTCWeb.Hubs
             await Clients.All.SendAsync("Receive", type, message);
         }
 
+        public async Task Do(string action, string message)
+        {
+            await Clients.All.SendAsync("Receive", action, message);
+        }
+
         //public async Task JoinRoom(string room, string user)
         //{
         //    await Groups.AddToGroupAsync(Context.ConnectionId, room);
