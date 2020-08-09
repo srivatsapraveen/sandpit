@@ -325,7 +325,6 @@ C:\Rubix-Works\Source\srivatsapraveen\sandpit\Projects\RTCWeb\bin\Debug\netcorea
 C:\Rubix-Works\Source\srivatsapraveen\sandpit\Projects\RTCWeb\bin\Debug\netcoreapp3.1\tr\Microsoft.CodeAnalysis.CSharp.resources.dll
 C:\Rubix-Works\Source\srivatsapraveen\sandpit\Projects\RTCWeb\bin\Debug\netcoreapp3.1\zh-Hans\Microsoft.CodeAnalysis.CSharp.resources.dll
 C:\Rubix-Works\Source\srivatsapraveen\sandpit\Projects\RTCWeb\bin\Debug\netcoreapp3.1\zh-Hant\Microsoft.CodeAnalysis.CSharp.resources.dll
-C:\Rubix-Works\Source\srivatsapraveen\sandpit\Projects\RTCWeb\obj\Debug\netcoreapp3.1\RTCWeb.csprojAssemblyReference.cache
 C:\Rubix-Works\Source\srivatsapraveen\sandpit\Projects\RTCWeb\obj\Debug\netcoreapp3.1\RTCWeb.csproj.CoreCompileInputs.cache
 C:\Rubix-Works\Source\srivatsapraveen\sandpit\Projects\RTCWeb\obj\Debug\netcoreapp3.1\RTCWeb.MvcApplicationPartsAssemblyInfo.cs
 C:\Rubix-Works\Source\srivatsapraveen\sandpit\Projects\RTCWeb\obj\Debug\netcoreapp3.1\RTCWeb.MvcApplicationPartsAssemblyInfo.cache

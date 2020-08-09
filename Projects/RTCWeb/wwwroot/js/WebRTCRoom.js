@@ -9,21 +9,31 @@ var remoteStream;
 var turnReady;
 
 ///////////////////////////////////////////////CONFIGS/////////////////////////////////
-////var pcConfig = {
-////    'iceServers': [{
-////        'urls': 'stun:stun.l.google.com:19302'
-////    }]
-////};
-
 var pcConfig = {
-      'iceServers': [{ 
-        'urls': ['stun:bn-turn1.xirsys.com']
-      }, {
-        'username': 'IVNphUJyVB96xzqM4rHGMEPn2iQLgXc5WB_BQWw2uaH4lGUFRozFmFqnwow2aYeoAAAAAF8qu2ZuaWdpbg==', 
-        'credential': 'f7bb5574-d723-11ea-9634-0242ac140004',
-         'urls': ['turn:bn-turn1.xirsys.com:80?transport=udp', 'turn:bn-turn1.xirsys.com:3478?transport=udp', 'turn:bn-turn1.xirsys.com:80?transport=tcp', 'turn:bn-turn1.xirsys.com:3478?transport=tcp', 'turns:bn-turn1.xirsys.com:443?transport=tcp', 'turns:bn-turn1.xirsys.com:5349?transport=tcp']
-      }]
+    'iceServers': [{
+        'urls': 'stun:stun.l.google.com:19302'
+    }]
 };
+
+//var pcConfig = {
+//    'iceServers': [{
+//        'urls': ['stun:bn-turn1.xirsys.com']
+//    }, {
+//        'username': 'IVNphUJyVB96xzqM4rHGMEPn2iQLgXc5WB_BQWw2uaH4lGUFRozFmFqnwow2aYeoAAAAAF8qu2ZuaWdpbg==',
+//        'credential': 'f7bb5574-d723-11ea-9634-0242ac140004',
+//        'urls': ['turn:bn-turn1.xirsys.com:80?transport=udp', 'turn:bn-turn1.xirsys.com:3478?transport=udp', 'turn:bn-turn1.xirsys.com:80?transport=tcp', 'turn:bn-turn1.xirsys.com:3478?transport=tcp', 'turns:bn-turn1.xirsys.com:443?transport=tcp', 'turns:bn-turn1.xirsys.com:5349?transport=tcp']
+//    }]
+//};
+
+//var pcConfig = {
+//      iceServers: [{
+//        urls: ["stun:bn-turn1.xirsys.com"]
+//      }, {
+//              username: "3IN_OdPatgNkBntmyUCJzY2mrq335zzIFjVsQ4sokQlcts5izrxWyeSSfBggEC9bAAAAAF8quGdwdmF0c2E=",
+//              credential: "2e60370e-d722-11ea-b5ff-0242ac140004",
+//              urls: ["turn:bn-turn1.xirsys.com:80?transport=udp", "turn:bn-turn1.xirsys.com:3478?transport=udp", "turn:bn-turn1.xirsys.com:80?transport=tcp", "turn:bn-turn1.xirsys.com:3478?transport=tcp", "turns:bn-turn1.xirsys.com:443?transport=tcp", "turns:bn-turn1.xirsys.com:5349?transport=tcp"]
+//          }]
+//};
 
 
 // Set up audio and video regardless of what devices are present.
@@ -121,7 +131,7 @@ connection.on("Receive", function (type, message) {
 /////////////////////////////////////////////////WEB RTC METHODS/////////////////////////////////
 function InitWebRTC() {
     navigator.mediaDevices.getUserMedia({
-        audio: false,
+        audio: true,
         video: true
     })
         .then(gotStream)
@@ -165,7 +175,11 @@ function maybeStart() {
     if (!isStarted && typeof localStream !== 'undefined' && isChannelReady) {
         console.log('>>>>>> creating peer connection');
         createPeerConnection();
-        pc.addStream(localStream);
+        //pc.addStream(localStream);
+        console.log('Adding tracks...', isInitiator);
+        for (const track of localStream.getTracks()) {
+            pc.addTrack(track, localStream);
+        }
         isStarted = true;
         console.log('isInitiator', isInitiator);
         if (isInitiator) {
@@ -183,6 +197,7 @@ window.onbeforeunload = function () {
 function createPeerConnection() {
     try {
         pc = new RTCPeerConnection(pcConfig);
+        pc.ontrack = ({ streams }) => remoteVideo.srcObject = streams[0];
         pc.onicecandidate = handleIceCandidate;
         pc.onaddstream = handleRemoteStreamAdded;
         pc.onremovestream = handleRemoteStreamRemoved;
@@ -215,7 +230,7 @@ function handleCreateOfferError(event) {
 
 function doCall() {
     console.log('Sending offer to peer');
-    pc.createOffer(setLocalAndSendOffer, handleCreateOfferError);
+    pc.createOffer(setLocalAndSendOffer, handleCreateOfferError, sdpConstraints);
 }
 
 function doAnswer() {
@@ -257,6 +272,7 @@ function requestTurn(turnURL) {
     var turnExists = false;
     for (var i in pcConfig.iceServers) {
         if (pcConfig.iceServers[i].urls.substr(0, 5) === 'turn:') {
+            console.log('You are already TURNING... ', pcConfig);
             turnExists = true;
             turnReady = true;
             break;
@@ -287,6 +303,13 @@ function handleRemoteStreamAdded(event) {
     console.log('Remote stream added.');
     remoteStream = event.stream;
     remoteVideo.srcObject = remoteStream;
+
+    //Play it
+    console.log('Remote stream playing.');
+    remoteVideo.autoplay = true;
+    remoteVideo.playsInline = true;
+    remoteVideo.muted = true;
+
     console.log(remoteStream);
 }
 
@@ -312,3 +335,20 @@ function stop() {
     pc = null;
 }
 
+const startButton = document.getElementById('startButton');
+startButton.addEventListener('click', startAction);
+function startAction() {
+    ////const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true })
+    ////video.srcObject = stream;
+    //for (const track of localStream.getTracks()) {
+    //    console.log('Adding track..', track);
+    //    pc.addTrack(track, localStream);
+    //}
+    console.log('pc.remotestream is', pc.remoteStream);
+    console.log('pc.remoteVideo is',pc.remoteVideo);
+    console.log('remotestream is',remoteStream);
+    remoteVideo.srcObject = pc.remoteStream;
+
+    //pc.remoteStream(localStream);
+    //pc.addStream(localStream);
+}

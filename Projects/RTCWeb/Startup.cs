@@ -55,6 +55,7 @@ namespace RTCWeb
                     pattern: "{controller=Home}/{action=Index}/{id?}");
                 endpoints.MapHub<ChatHub>("/chathub");
                 endpoints.MapHub<RTCHub>("/rtchub");
+                endpoints.MapHub<RTCLiteHub>("/RTCLiteHub");
             });
         }
     }
