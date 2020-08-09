@@ -9,21 +9,21 @@ var remoteStream;
 var turnReady;
 
 ///////////////////////////////////////////////CONFIGS/////////////////////////////////
-var pcConfig = {
-    'iceServers': [{
-        'urls': 'stun:stun.l.google.com:19302'
-    }]
-};
+////var pcConfig = {
+////    'iceServers': [{
+////        'urls': 'stun:stun.l.google.com:19302'
+////    }]
+////};
 
-//var pcConfig = {
-//      'iceServers': [{ 
-//        'urls': ['stun:bn-turn1.xirsys.com']
-//      }, {
-//        'username': 'IVNphUJyVB96xzqM4rHGMEPn2iQLgXc5WB_BQWw2uaH4lGUFRozFmFqnwow2aYeoAAAAAF8qu2ZuaWdpbg==', 
-//        'credential': 'f7bb5574-d723-11ea-9634-0242ac140004',
-//         'urls': ['turn:bn-turn1.xirsys.com:80?transport=udp', 'turn:bn-turn1.xirsys.com:3478?transport=udp', 'turn:bn-turn1.xirsys.com:80?transport=tcp', 'turn:bn-turn1.xirsys.com:3478?transport=tcp', 'turns:bn-turn1.xirsys.com:443?transport=tcp', 'turns:bn-turn1.xirsys.com:5349?transport=tcp']
-//      }]
-//};
+var pcConfig = {
+      'iceServers': [{ 
+        'urls': ['stun:bn-turn1.xirsys.com']
+      }, {
+        'username': 'IVNphUJyVB96xzqM4rHGMEPn2iQLgXc5WB_BQWw2uaH4lGUFRozFmFqnwow2aYeoAAAAAF8qu2ZuaWdpbg==', 
+        'credential': 'f7bb5574-d723-11ea-9634-0242ac140004',
+         'urls': ['turn:bn-turn1.xirsys.com:80?transport=udp', 'turn:bn-turn1.xirsys.com:3478?transport=udp', 'turn:bn-turn1.xirsys.com:80?transport=tcp', 'turn:bn-turn1.xirsys.com:3478?transport=tcp', 'turns:bn-turn1.xirsys.com:443?transport=tcp', 'turns:bn-turn1.xirsys.com:5349?transport=tcp']
+      }]
+};
 
 
 // Set up audio and video regardless of what devices are present.
