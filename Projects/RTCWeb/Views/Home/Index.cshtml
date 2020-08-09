@@ -8,11 +8,20 @@
         
         <div>
             <form method="post">
-                <p id="instructions" class="mb-0">Please enter a room name.</p>
+                <label for="cars">Choose a room:</label>
+                <br/>
+                <select id="rooms" name="roomid">
+                    <option value="room001">Room-1</option>
+                    @*<option value="room002">Room-2</option>
+                    <option value="room003">Room-3</option>
+                    <option value="room004">Room-4</option>*@
+                </select>
+
+                @*<p id="instructions" class="mb-0">Please enter a room name.</p>
                 <div id="room-id-input-div">
                     <input type="text" id="rid" value="12345" name="roomid">
                     <br />
-                </div>
+                </div>*@
                 <p id="instructions" class="mt-4 mb-0">Please enter a user name.</p>
                 <div id="user-id-input-div">
                     <input type="text" id="uid" value="JohnDoe" name="userid">

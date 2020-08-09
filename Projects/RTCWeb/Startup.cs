@@ -25,7 +25,18 @@ namespace RTCWeb
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddControllersWithViews().AddRazorRuntimeCompilation();
-            services.AddSignalR();
+            //services.AddCors(options => options.AddPolicy("CorsPolicy",
+            //            builder =>
+            //            {
+            //                builder.AllowAnyMethod().AllowAnyHeader()
+            //                       .WithOrigins("http://localhost:55830")
+            //                       .AllowCredentials();
+            //            }));
+            services.AddSignalR(hubOptions => {
+                hubOptions.EnableDetailedErrors = true;
+                hubOptions.MaximumReceiveMessageSize = null;
+                hubOptions.KeepAliveInterval = TimeSpan.FromSeconds(3);
+            });
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -43,9 +54,8 @@ namespace RTCWeb
             }
             app.UseHttpsRedirection();
             app.UseStaticFiles();
-
             app.UseRouting();
-
+            //app.UseCors("CorsPolicy");
             app.UseAuthorization();
 
             app.UseEndpoints(endpoints =>
@@ -54,8 +64,13 @@ namespace RTCWeb
                     name: "default",
                     pattern: "{controller=Home}/{action=Index}/{id?}");
                 endpoints.MapHub<ChatHub>("/chathub");
-                endpoints.MapHub<RTCHub>("/rtchub");
-                endpoints.MapHub<RTCLiteHub>("/RTCLiteHub");
+                //endpoints.MapHub<RTCHub>("/rtchub");
+                endpoints.MapHub<RTCLiteHub>("/RTCLiteHub", options =>
+                {
+                    options.ApplicationMaxBufferSize = 1024000;
+                    // Set to 0 for no limit, or to some non-zero value (in bytes) to set a different buffer limit
+                    options.TransportMaxBufferSize = 0;
+                });
             });
         }
     }

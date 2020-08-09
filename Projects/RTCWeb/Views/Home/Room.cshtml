@@ -2,16 +2,20 @@
     ViewData["Title"] = "Home Page";
 }
 
+
 <div class="row">
     <div class="col-md-8 mt-2">
         <video id="localVideo" class="mt-2 ml-2" autoplay playsinline muted style="background-color:gray;width:140px;height:105px;position:absolute"></video>
         @*<video id="remoteVideo" class="mt-2 ml-2" autoplay playsinline muted style="background-color:gray;width:140px;height:105px;position:absolute;top:150px"></video>*@
         <video id="remoteVideo" autoplay playsinline muted style="background-color:black;height:370px;width:100%"></video>
 
-        @*<button id="showVideo" onclick="init()">Open camera</button>*@
+        <button id="startButton" style="width:40px" onclick="toggle('video');"><i id="vidicon" class="fas fa-video-slash"></i></button>
+        <button id="startButton" style="width:40px" onclick="toggle('audio');"><i id="audicon" class="fas fa-microphone-alt-slash"></i></button>
+
+        @*<button id="showVideo" onclick="init()">Open camera</button>
         <button id="startButton">Start</button>
         <button id="callButton">Call</button>
-        @*<button id="hangupButton">Hang Up</button>*@
+        <button id="hangupButton">Hang Up</button>*@
         <div id="errorMsg"></div>
     </div>
 
@@ -32,6 +36,7 @@
 <input class="mytext" id="roomInput" style="display: none" value="@ViewBag.RoomID" />
 <input class="mytext" id="userInput" style="display:none" value="@ViewBag.UserID" />
 <script src="https://jan-ivar.github.io/localSocket/localSocket.js"></script>
-<script src="~/js/WebRTCLite2.js"></script>
+<script src="~/js/Chat.js"></script>
+<script src="~/js/Video.js"></script>
 
 @*<script src="~/js/WebRTCRoomLite.js"></script>*@

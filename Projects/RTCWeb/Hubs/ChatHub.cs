@@ -8,7 +8,7 @@ namespace RTCWeb.Hubs
         public async Task AddToGroup(string room, string user)
         {
             await Groups.AddToGroupAsync(Context.ConnectionId, room);
-            await Clients.Group(room).SendAsync("Notify", $"{user} has joined the room {room}.");
+            await Clients.Group(room).SendAsync("Notify", $"{user} has joined {room}.");
         }
 
         //public async Task AddToGroup(string room, string user)

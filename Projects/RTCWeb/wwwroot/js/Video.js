@@ -22,15 +22,30 @@ var remoteStream;
 const localVideo = document.getElementById('localVideo');
 const remoteVideo = document.getElementById('remoteVideo');
 
-
 const pc = new RTCPeerConnection(pcConfig);
 
-const startButton = document.getElementById('startButton');
-startButton.addEventListener('click', startAction);
+var showaudio = false;
+var showvideo = false;
+
+//const startButton = document.getElementById('startButton');
+//startButton.addEventListener('click', startAction);
+function toggle(media) {
+    if (media === 'video') showvideo = !showvideo;
+    if (media === 'audio') showaudio = !showaudio;
+    if (showvideo) { $("#vidicon").removeClass("fas fa-video-slash"); $("#vidicon").addClass("fas fa-video"); }
+    else { $("#vidicon").removeClass("fas fa-video"); $("#vidicon").addClass("fas fa-video-slash");}
+    if (showaudio) { $("#audicon").removeClass("fas fa-microphone-alt-slash"); $("#audicon").addClass("fas fa-microphone-alt"); }
+    else { $("#audicon").removeClass("fas fa-microphone-alt"); $("#audicon").addClass("fas fa-microphone-alt-slash"); }
+
+    if (showvideo || showaudio)
+        startAction();
+    else
+        endAction();
+}
 function startAction() {
     navigator.mediaDevices.getUserMedia({
-        audio: true,
-        video: true
+        audio: showaudio,
+        video: showvideo
     })
         .then(gotStream)
         .catch(function (e) {
@@ -43,13 +58,24 @@ function gotStream(stream) {
     localStream = stream;
     localVideo.srcObject = stream;
     //console.log('Adding stream to PC');
+    //NOTE : Add stream and onadd stream are deprecated!!!
     //pc.addStream(localStream);
-    console.log('Adding tracks to PC');
+
     for (const track of stream.getTracks()) {
         pc.addTrack(track, stream);
     }
+
     console.log(localStream);
 }
+
+function endAction() {
+    localStream = null;
+    localVideo.srcObject = null;
+
+    const senders = pc.getSenders();
+    senders.forEach((sender) => pc.removeTrack(sender));
+}
+//startAction(false,false);
 
 //pc.onaddstream = handleRemoteStreamAdded;
 
@@ -70,9 +96,13 @@ function gotStream(stream) {
 pc.ontrack = ({ streams }) => {
     console.log('on track - setting remote stream', streams);
     remoteVideo.srcObject = streams[0];
+    remoteVideo.onloadedmetadata = function (e) {
+        remoteVideo.play();
+    };
 }
 pc.oniceconnectionstatechange = () => {
-    console.log('on iceconnectionstatechnge',pc.iceConnectionState);
+    console.log('on iceconnectionstatechnge', pc.iceConnectionState);
+    if (pc.iceConnectionState === 'disconnected') remoteVideo.srcObject = null;
 }
 pc.onicecandidate = ({ candidate }) => {
     //console.log('on icecandidate', candidate);
@@ -103,9 +133,11 @@ pc.onnegotiationneeded = async () => {
 //    }
 //}
 
-var connection = new signalR.HubConnectionBuilder().withUrl("/rtclitehub").build();
-connection.start().then(function () {
+var rtcHUB = new signalR.HubConnectionBuilder().withUrl("/rtclitehub").withAutomaticReconnect().build();
+rtcHUB.serverTimeoutInMilliseconds = 1000 * 60 * 10; 
+rtcHUB.start().then(function () {
     console.log('SignalR Connected Successfully');
+    //shareScreen();
 }).catch(function (err) {
     return console.error(err.toString());
 });
@@ -113,12 +145,12 @@ connection.start().then(function () {
 
 function send(message) {
     //console.log('Sending...' + JSON.stringify(message));
-    connection.invoke("Send", JSON.stringify(message)).catch(function (err) {
+    rtcHUB.invoke("Send", JSON.stringify(message)).catch(function (err) {
         return console.error('COULD NOT SEND TO SERVER:' + err.toString());
     });
 }
 
-connection.on("Receive", function (message) {
+rtcHUB.on("Receive", function (message) {
     //console.log('Recieving ...' + message);
     var msg = JSON.parse(message);    
     if (('sdp' in msg)) {

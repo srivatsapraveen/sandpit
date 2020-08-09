@@ -1,8 +1,4 @@
-﻿//https://docs.microsoft.com/en-us/aspnet/signalr/overview/guide-to-the-api/mapping-users-to-connections
-//https://medium.com/a-layman/learn-how-to-use-signalr-to-build-a-chatroom-application-63e8bb8049ff
-//https://stackoverflow.com/questions/29509396/signalr-client-how-to-set-user-when-start-connection
-
-"use strict";
+﻿"use strict";
 
 //var room = document.getElementById("roomInput").value;
 //var user = document.getElementById("userInput").value;
@@ -20,7 +16,7 @@ input.addEventListener("keyup", function (event) {
     }
 });
 
-var chatHUB = new signalR.HubConnectionBuilder().withUrl("/chatHub").withAutomaticReconnect().build();
+var chatHUB = new signalR.HubConnectionBuilder().withUrl("/chatHub").build();
 
 //Disable send button until chatHUB is established
 document.getElementById("sendButton").disabled = true;
