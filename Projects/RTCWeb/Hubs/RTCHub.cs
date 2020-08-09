@@ -34,7 +34,14 @@ namespace RTCWeb.Hubs
 
         public async Task Send(string type,string message)
         {
-            await Clients.All.SendAsync("Receive", type, message);
+            try
+            {
+                await Clients.Others.SendAsync("Receive", type, message);
+            }
+            catch (Exception ex)
+            {
+                await Clients.Caller.SendAsync("Log", ex.Message);
+            }
         }
 
         public async Task Do(string action, string message)

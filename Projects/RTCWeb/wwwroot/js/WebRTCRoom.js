@@ -19,7 +19,8 @@ var pcConfig = {
 //      'iceServers': [{ 
 //        'urls': ['stun:bn-turn1.xirsys.com']
 //      }, {
-//        'username': 'IVNphUJyVB96xzqM4rHGMEPn2iQLgXc5WB_BQWw2uaH4lGUFRozFmFqnwow2aYeoAAAAAF8qu2ZuaWdpbg==', 'credential': 'f7bb5574-d723-11ea-9634-0242ac140004',
+//        'username': 'IVNphUJyVB96xzqM4rHGMEPn2iQLgXc5WB_BQWw2uaH4lGUFRozFmFqnwow2aYeoAAAAAF8qu2ZuaWdpbg==', 
+//        'credential': 'f7bb5574-d723-11ea-9634-0242ac140004',
 //         'urls': ['turn:bn-turn1.xirsys.com:80?transport=udp', 'turn:bn-turn1.xirsys.com:3478?transport=udp', 'turn:bn-turn1.xirsys.com:80?transport=tcp', 'turn:bn-turn1.xirsys.com:3478?transport=tcp', 'turns:bn-turn1.xirsys.com:443?transport=tcp', 'turns:bn-turn1.xirsys.com:5349?transport=tcp']
 //      }]
 //};
@@ -44,7 +45,7 @@ connection.start().then(function () {
 function sendMessage(type, message) {
     console.log('Client sending (' + type + ')', message);
     connection.invoke("Send", type, message).catch(function (err) {
-        return console.error(err.toString());
+        return console.error('COULD NOT SEND TO SERVER:' + err.toString());
     });
 }
 
@@ -63,6 +64,10 @@ connection.on("disconnected", function (ucount) {
     console.log('Disconnected...' + ucount);
 });
 
+connection.on("Log", function (message) {
+    console.log('SERVER Error...' + message);
+});
+
 connection.on("Receive", function (type, message) {
     console.log('Recieving...' + type);
     switch (type) {
@@ -74,23 +79,25 @@ connection.on("Receive", function (type, message) {
         case 'offer':
             console.log('offer:' + message);
             if (!isInitiator && !isStarted) {
-                console.log('isInitiator is FALSE AND isStarted is FALSE');
+                console.log('Calling maybeStart().....');
                 maybeStart();   
             }
-            pc.setRemoteDescription(new RTCSessionDescription(message));
+            console.log('Setting remote desc.....');
+            pc.setRemoteDescription(new RTCSessionDescription(JSON.parse(message)));
+            console.log('Calling doAnswer().....');
             doAnswer();
             break;
         case 'answer':
             console.log('answer:' + message);
             if (isStarted) {
-                console.log('isStarted TRUE');
-                pc.setRemoteDescription(new RTCSessionDescription(message));
+                console.log('Calling setRemoteDescription.....');
+                pc.setRemoteDescription(new RTCSessionDescription(JSON.parse(message)));
             }
             break;
         case 'candidate':
             console.log('candidate:' + message);
             if (isStarted) {
-                console.log('isStarted TRUE');
+                console.log('Adding ICE Candidate......');
                 var candidate = new RTCIceCandidate({
                     sdpMLineIndex: message.label,
                     candidate: message.candidate
@@ -101,12 +108,12 @@ connection.on("Receive", function (type, message) {
         case 'hangup':
             console.log('hangup:' + message);
             if (isStarted) {
-                console.log('isStarted TRUE... hanging up now.....');
+                console.log('Calling handleRemoteHangup.....');
                 handleRemoteHangup();
             }
             break;
         default:
-            console.log('UNKNOWN TYPE : ' + type + ', message:' + message);
+            //console.log('UNKNOWN TYPE : ' + type + ', message:' + message);
     }
 });
 
@@ -130,7 +137,8 @@ const remoteVideo = document.getElementById('remoteVideo');
 function gotStream(stream) {
     console.log('Adding local stream.');
     localStream = stream;
-    localVideo.srcObject = stream;
+    localVideo.srcObject = localStream;
+    console.log(localStream);
     sendMessage('gotmedia','live streaming.....');
     if (isInitiator) {
         maybeStart();
@@ -147,6 +155,9 @@ if (location.hostname !== 'localhost') {
     requestTurn(
         'https://computeengineondemand.appspot.com/turn?username=41784574&key=4080218913'
     );
+}
+else {
+    console.log('LOCALHOST : You are good to go without TURNing');
 }
 
 function maybeStart() {
@@ -171,7 +182,7 @@ window.onbeforeunload = function () {
 
 function createPeerConnection() {
     try {
-        pc = new RTCPeerConnection(null);
+        pc = new RTCPeerConnection(pcConfig);
         pc.onicecandidate = handleIceCandidate;
         pc.onaddstream = handleRemoteStreamAdded;
         pc.onremovestream = handleRemoteStreamRemoved;
@@ -224,15 +235,15 @@ function doAnswer() {
 
 function setLocalAndSendOffer(sessionDescription) {
     pc.setLocalDescription(sessionDescription);
-    console.log('setLocalAndSendMessage sending message', sessionDescription);
-    sendMessage('offer',sessionDescription);
+    console.log('setLocalAndSendOffer sending message', sessionDescription);
+    sendMessage('offer', JSON.stringify(sessionDescription));
 }
 
 
 function setLocalAndSendAnswer(sessionDescription) {
     pc.setLocalDescription(sessionDescription);
-    console.log('setLocalAndSendMessage sending message', sessionDescription);
-    sendMessage('answer',sessionDescription);
+    console.log('setLocalAndSendAnswer sending message', sessionDescription);
+    sendMessage('answer', JSON.stringify(sessionDescription));
 }
 
 function onCreateSessionDescriptionError(error) {
@@ -276,6 +287,7 @@ function handleRemoteStreamAdded(event) {
     console.log('Remote stream added.');
     remoteStream = event.stream;
     remoteVideo.srcObject = remoteStream;
+    console.log(remoteStream);
 }
 
 function handleRemoteStreamRemoved(event) {
