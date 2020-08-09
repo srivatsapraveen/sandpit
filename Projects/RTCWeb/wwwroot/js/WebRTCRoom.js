@@ -9,11 +9,11 @@ var remoteStream;
 var turnReady;
 
 ///////////////////////////////////////////////CONFIGS/////////////////////////////////
-var pcConfig = {
-    'iceServers': [{
-        'urls': 'stun:stun.l.google.com:19302'
-    }]
-};
+//var pcConfig = {
+//    'iceServers': [{
+//        'urls': 'stun:stun.l.google.com:19302'
+//    }]
+//};
 
 //var pcConfig = {
 //    'iceServers': [{
@@ -25,15 +25,15 @@ var pcConfig = {
 //    }]
 //};
 
-//var pcConfig = {
-//      iceServers: [{
-//        urls: ["stun:bn-turn1.xirsys.com"]
-//      }, {
-//              username: "3IN_OdPatgNkBntmyUCJzY2mrq335zzIFjVsQ4sokQlcts5izrxWyeSSfBggEC9bAAAAAF8quGdwdmF0c2E=",
-//              credential: "2e60370e-d722-11ea-b5ff-0242ac140004",
-//              urls: ["turn:bn-turn1.xirsys.com:80?transport=udp", "turn:bn-turn1.xirsys.com:3478?transport=udp", "turn:bn-turn1.xirsys.com:80?transport=tcp", "turn:bn-turn1.xirsys.com:3478?transport=tcp", "turns:bn-turn1.xirsys.com:443?transport=tcp", "turns:bn-turn1.xirsys.com:5349?transport=tcp"]
-//          }]
-//};
+var pcConfig = {
+      iceServers: [{
+        urls: ["stun:bn-turn1.xirsys.com"]
+      }, {
+              username: "3IN_OdPatgNkBntmyUCJzY2mrq335zzIFjVsQ4sokQlcts5izrxWyeSSfBggEC9bAAAAAF8quGdwdmF0c2E=",
+              credential: "2e60370e-d722-11ea-b5ff-0242ac140004",
+              urls: ["turn:bn-turn1.xirsys.com:80?transport=udp", "turn:bn-turn1.xirsys.com:3478?transport=udp", "turn:bn-turn1.xirsys.com:80?transport=tcp", "turn:bn-turn1.xirsys.com:3478?transport=tcp", "turns:bn-turn1.xirsys.com:443?transport=tcp", "turns:bn-turn1.xirsys.com:5349?transport=tcp"]
+          }]
+};
 
 
 // Set up audio and video regardless of what devices are present.
@@ -196,17 +196,21 @@ window.onbeforeunload = function () {
 
 function createPeerConnection() {
     try {
-        pc = new RTCPeerConnection(pcConfig);
-        pc.ontrack = ({ streams }) => remoteVideo.srcObject = streams[0];
+        pc = new RTCPeerConnection(pcConfig);        
         pc.onicecandidate = handleIceCandidate;
-        pc.onaddstream = handleRemoteStreamAdded;
-        pc.onremovestream = handleRemoteStreamRemoved;
+        pc.ontrack = handleRemoteTrack;
+        //pc.onaddstream = handleRemoteStreamAdded;
+        //pc.onremovestream = handleRemoteStreamRemoved;
         console.log('Created RTCPeerConnnection');
     } catch (e) {
         console.log('Failed to create PeerConnection, exception: ' + e.message);
         alert('Cannot create RTCPeerConnection object.');
         return;
     }
+}
+function handleRemoteTrack(streams) {
+    console.log('on track - setting remote stream', streams);
+    remoteVideo.srcObject = streams[0];
 }
 
 function handleIceCandidate(event) {
@@ -344,10 +348,10 @@ function startAction() {
     //    console.log('Adding track..', track);
     //    pc.addTrack(track, localStream);
     //}
-    console.log('pc.remotestream is', pc.remoteStream);
-    console.log('pc.remoteVideo is',pc.remoteVideo);
-    console.log('remotestream is',remoteStream);
-    remoteVideo.srcObject = pc.remoteStream;
+    //console.log('pc.remotestream is', pc.remoteStream);
+    //console.log('pc.remoteVideo is',pc.remoteVideo);
+    //console.log('remotestream is',remoteStream);
+    //remoteVideo.srcObject = pc.remoteStream;
 
     //pc.remoteStream(localStream);
     //pc.addStream(localStream);

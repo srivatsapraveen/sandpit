@@ -1,11 +1,19 @@
 ﻿//https://jsfiddle.net/jib1/2yLakm60
 
-var tempmsg;
+//var pcConfig = {
+//    'iceServers': [{
+//        'urls': 'stun:stun.l.google.com:19302'
+//    }]
+//};
 
 var pcConfig = {
-    'iceServers': [{
-        'urls': 'stun:stun.l.google.com:19302'
-    }]
+      iceServers: [{
+        urls: ["stun:bn-turn1.xirsys.com"]
+      }, {
+              username: "3IN_OdPatgNkBntmyUCJzY2mrq335zzIFjVsQ4sokQlcts5izrxWyeSSfBggEC9bAAAAAF8quGdwdmF0c2E=",
+              credential: "2e60370e-d722-11ea-b5ff-0242ac140004",
+              urls: ["turn:bn-turn1.xirsys.com:80?transport=udp", "turn:bn-turn1.xirsys.com:3478?transport=udp", "turn:bn-turn1.xirsys.com:80?transport=tcp", "turn:bn-turn1.xirsys.com:3478?transport=tcp", "turns:bn-turn1.xirsys.com:443?transport=tcp", "turns:bn-turn1.xirsys.com:5349?transport=tcp"]
+          }]
 };
 
 var localStream;
@@ -34,12 +42,30 @@ function gotStream(stream) {
     console.log('Adding local stream.');
     localStream = stream;
     localVideo.srcObject = stream;
+    //console.log('Adding stream to PC');
+    //pc.addStream(localStream);
     console.log('Adding tracks to PC');
     for (const track of stream.getTracks()) {
         pc.addTrack(track, stream);
     }
     console.log(localStream);
 }
+
+//pc.onaddstream = handleRemoteStreamAdded;
+
+//function handleRemoteStreamAdded(event) {
+//    console.log('Remote stream added.');
+//    remoteStream = event.stream;
+//    remoteVideo.srcObject = remoteStream;
+
+//    //Play it
+//    console.log('Remote stream playing.');
+//    remoteVideo.autoplay = true;
+//    remoteVideo.playsInline = true;
+//    remoteVideo.muted = true;
+
+//    console.log(remoteStream);
+//}
 
 pc.ontrack = ({ streams }) => {
     console.log('on track - setting remote stream', streams);
@@ -95,7 +121,6 @@ function send(message) {
 connection.on("Receive", function (message) {
     //console.log('Recieving ...' + message);
     var msg = JSON.parse(message);    
-    tempmsg = msg;
     if (('sdp' in msg)) {
         console.log('sdp' + msg.sdp.type);
         pc.setRemoteDescription(msg.sdp);
