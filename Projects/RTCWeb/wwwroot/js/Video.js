@@ -57,6 +57,7 @@ pc.onicecandidate = ({ candidate }) => {
 pc.onnegotiationneeded = async () => {
     await pc.setLocalDescription(await pc.createOffer());
     debugLog('on onnegotiationneeded', pc.localDescription);
+    pc.localDescription = setMediaBitrates(pc.localDescription);
     send({ sdp: pc.localDescription });
 }
 const localVideo = document.getElementById('localVideo');
@@ -99,6 +100,7 @@ function showVideo(stream) {
     debugLog('Showing local camera..');
     localStream = stream;
     localVideo.srcObject = localStream;
+    localVideo.clientHeight = 105; localVideo.clientWidth = 140;
     addTracks();
 }
 function reconnect() {
@@ -126,7 +128,12 @@ function updateTracks() {
 }
 
 function setBitRate(_vBitRate, _aBitRate) {
-    const vparams = vSender.getParameters();
+    //const vparams = vSender.getParameters();
+    //debugLog('Initial vparams..', vparams);
+
+    const sender = pc.getSenders()[0];
+    debugLog('Sender is..', sender);
+    const vparams = sender.getParameters();
     debugLog('Initial vparams..', vparams);
 
     if (!vparams.encodings) { vparams.encodings = [{}]; }
@@ -139,6 +146,10 @@ function setBitRate(_vBitRate, _aBitRate) {
     }
     debugLog('Final vparams..', vparams);
     vSender.setParameters(parameters)
+        .then(() => {
+            
+        })
+        .catch(e => console.error(e));
 
     //const aparams = aSender.getParameters();
     //debugLog('Initial aparams..', aparams);
@@ -180,6 +191,7 @@ rtcHUB.on("Receive", function (message) {
         if ((msg.sdp.type === "offer")) {
             debugLog('got offer sending answer', pc.localDescription);
             pc.setLocalDescription(pc.createAnswer());
+            pc.localDescription = setMediaBitrates(pc.localDescription);
             debugLog('answer', pc.localDescription);
             send({ sdp: pc.localDescription });
         }
@@ -191,6 +203,81 @@ rtcHUB.on("Receive", function (message) {
         pc.addIceCandidate(candidate);
     }
 });
+
+function setMediaBitrates(sdp) {
+    return sdp;
+    //return setMediaBitrate(setMediaBitrate(sdp, "video", 100), "audio", 50);
+}
+
+function setMediaBitrate(sdp, mediaType, bitrate) {
+    let sdpLines = sdp.toString().split('\n'),
+        mediaLineIndex = -1,
+        mediaLine = 'm =' + mediaType,
+        bitrateLineIndex = -1,
+        bitrateLine = 'b = AS: ' + bitrate;
+
+    mediaLineIndex = sdpLines.findIndex(line => line.startsWith(mediaLine));
+
+    // If we find a line matching “m={mediaType}”
+    if (mediaLineIndex && mediaLineIndex < sdpLines.length) {
+        // Skip the media line
+        bitrateLineIndex = mediaLineIndex + 1;
+
+        // Skip both i=* and c=* lines (bandwidths limiters have to come afterwards)
+        while (sdpLines[bitrateLineIndex].startsWith('i=') || sdpLines[bitrateLineIndex].startsWith('c=')) {
+            bitrateLineIndex++;
+        }
+
+        if (sdpLines[bitrateLineIndex].startsWith('b=')) {
+            // If the next line is a b=* line, replace it with our new bandwidth
+            sdpLines[bitrateLineIndex] = bitrateLine;
+        } else {
+            // Otherwise insert a new bitrate line.
+            sdpLines.splice(bitrateLineIndex, 0, bitrateLine);
+        }
+    }
+
+    // Then return the updated sdp content as a string
+    return sdpLines.join('\n');
+}
+
+function setMediaBitrate_old(sdp, media, bitrate) {
+    var lines = sdp.toString().split("\n");
+    var line = -1;
+    for (var i = 0; i < lines.length; i++) {
+        if (lines[i].indexOf("m=" + media) === 0) {
+            line = i;
+            break;
+        }
+    }
+    if (line === -1) {
+        console.debug("Could not find the m line for", media);
+        return sdp;
+    }
+    console.debug("Found the m line for", media, "at line", line);
+
+    // Pass the m line
+    line++;
+
+    // Skip i and c lines
+    while (lines[line].indexOf("i=") === 0 || lines[line].indexOf("c=") === 0) {
+        line++;
+    }
+
+    // If we're on a b line, replace it
+    if (lines[line].indexOf("b") === 0) {
+        console.debug("Replaced b line at line", line);
+        lines[line] = "b=AS:" + bitrate;
+        return lines.join("\n");
+    }
+
+    // Add a new b line
+    console.debug("Adding new b line before line", line);
+    var newLines = lines.slice(0, line)
+    newLines.push("b=AS:" + bitrate)
+    newLines = newLines.concat(lines.slice(line, lines.length))
+    return newLines.join("\n")
+}
 
 function debugLog(message) {
     console.log(message);
