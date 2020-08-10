@@ -118,6 +118,13 @@ function addTracks() {
     //setBitRate(120, 120);
 }
 
+function updateTracks() {
+    if (localStream != undefined) {
+        if (showvideo) { vTrack.enabled = true; } else { vTrack.enabled = false; }
+        if (showaudio) { aTrack.enabled = true; } else { aTrack.enabled = false; }
+    }
+}
+
 function setBitRate(_vBitRate, _aBitRate) {
     const vparams = vSender.getParameters();
     debugLog('Initial vparams..', vparams);
@@ -147,140 +154,6 @@ function setBitRate(_vBitRate, _aBitRate) {
     //debugLog('Final aparams..', aparams);
     //aSender.setParameters(aparams)
 }
-function updateTracks() {
-    if (localStream != undefined) {
-        if (showvideo) { vTrack.enabled = true; } else { vTrack.enabled = false; }
-        if (showaudio) { aTrack.enabled = true; } else { aTrack.enabled = false; }
-    }
-}
-
-
-//function connect() {
-//    //alert('konnecting!!!');
-//    startAction();
-//}
-//const startButton = document.getElementById('startButton');
-//startButton.addEventListener('click', startAction);
-
-//function startAction() {
-//    navigator.mediaDevices.getUserMedia({
-//        audio: true,
-//        video: video_constraints
-//    })
-//        .then(gotStream)
-//        .catch(function (e) {
-//            alert('getUserMedia() error: ' + e.name);
-//        });    
-//}
-
-//function gotStream(stream) {
-//    debugLog('Adding local stream.');
-//    localStream = stream;
-//    localVideo.srcObject = localStream;
-
-//    aTrack = localStream.getAudioTracks()[0];
-//    aSender = pc.addTrack(aTrack, localStream);
-
-//    vTrack = localStream.getVideoTracks()[0];
-//    vSender = pc.addTrack(vTrack, localStream);
-
-//    _vBitRate = 120; _aBitRate = 120;
-//    const parameters = vSender.getParameters();
-//    debugLog('Initial params..',parameters);
-
-//    if (!parameters.encodings) {
-//        parameters.encodings = [{}];
-//    }
-//    if (vSender.track.kind === "video") {
-//        if (parameters.encodings.length > 0) {
-//            if (_vBitRate == 0) {
-//                delete parameters.encodings[0].maxBitrate;
-//            } else {
-//                parameters.encodings[0].maxBitrate = _vBitRate * 1000;
-//            }
-//        }
-//    } else {
-//        if (parameters.encodings.length > 0) {
-//            if (_aBitRate == 0) {
-//                delete parameters.encodings[0].maxBitrate;
-//            } else {
-//                parameters.encodings[0].maxBitrate = _vBitRate * 1000;
-//            }
-//        }
-//    }
-
-//    debugLog('Updated params..',parameters);
-//    vSender.setParameters(parameters)
-//    //vTrack.enabled = false;
-//    //aTrack.enabled = false;
-
-//    doAction();
-//    //debugLog(localStream);
-//}
-
-//function doAction() {
-
-//    if (localStream != undefined) {
-//        if (showvideo) { vTrack.enabled = true; } else { vTrack.enabled = false; }
-//        if (showaudio) { aTrack.enabled = true; } else { aTrack.enabled = false; }
-//    }
-
-
-//    //for (const t of localStream.getTracks()) {
-//    //    //debugLog('t.kind', t.kind);
-//    //    if (t.kind === 'video' && showvideo) { vTrack.enabled = true; } else { vTrack.enabled = false; }
-//    //    if (t.kind === 'audio' && showaudio) { aTrack.enabled = true; } else { aTrack.enabled = false; }
-//    //    //pc.replaceTrack();
-//    //}
-//}
-
-//function endAction() {
-//    localStream = null;
-//    localVideo.srcObject = null;
-
-//    const senders = pc.getSenders();
-//    senders.forEach((sender) => {
-
-//        pc.removeTrack(sender)
-//    });
-//}
-//startAction(false,false);
-
-//pc.onaddstream = handleRemoteStreamAdded;
-
-//function handleRemoteStreamAdded(event) {
-//    debugLog('Remote stream added.');
-//    remoteStream = event.stream;
-//    remoteVideo.srcObject = remoteStream;
-
-//    //Play it
-//    debugLog('Remote stream playing.');
-//    remoteVideo.autoplay = true;
-//    remoteVideo.playsInline = true;
-//    remoteVideo.muted = true;
-
-//    debugLog(remoteStream);
-//}
-
-
-//const sc = new localSocket(); // localStorage signaling hack
-//sc.onmessage = async ({ data: { sdp, candidate } }) => {
-//    if (sdp) {
-//        debugLog('sdp', sdp);
-//        await pc.setRemoteDescription(sdp);
-//        if (sdp.type == "offer") {
-//            await pc.setLocalDescription(await pc.createAnswer());
-//            debugLog('answer', pc.localDescription);
-//            sc.send({ sdp: pc.localDescription });
-//        }
-//        else {
-//          debugLog('got answer', sdp);
-//        }
-//    } else if (candidate) {
-//        debugLog('candidate', candidate);
-//        await pc.addIceCandidate(candidate);
-//    }
-//}
 
 var rtcHUB = new signalR.HubConnectionBuilder().withUrl("/rtclitehub").withAutomaticReconnect().build();
 rtcHUB.serverTimeoutInMilliseconds = 1000 * 60 * 10; 
@@ -290,7 +163,6 @@ rtcHUB.start().then(function () {
 }).catch(function (err) {
     return console.error(err.toString());
 });
-
 
 function send(message) {
     //debugLog('Sending...' + JSON.stringify(message));
