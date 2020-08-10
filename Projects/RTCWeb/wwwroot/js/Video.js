@@ -2,11 +2,6 @@
 //Mute Audio/Video https://jsfiddle.net/j1elo/n3tf0rtL/
 //https://github.com/Kurento/experiments/blob/master/WebRTC/mute-tracks/mute-tracks.js (also has debug info for getstats())
 
-//var pcConfig = {
-//    'iceServers': [{
-//        'urls': 'stun:stun.l.google.com:19302'
-//    }]
-//};
 var logHUBready = false;
 var logHUB = new signalR.HubConnectionBuilder().withUrl("/loghub").withAutomaticReconnect().build();
 logHUB.serverTimeoutInMilliseconds = 1000 * 60 * 10;
@@ -17,6 +12,11 @@ logHUB.start().then(function () {
     return console.error(err.toString());
 });
 
+//var pcConfig = {
+//    'iceServers': [{
+//        'urls': 'stun:stun.l.google.com:19302'
+//    }]
+//};
 
 var pcConfig = {
       iceServers: [{
@@ -36,106 +36,203 @@ var video_constraints = {
     optional: []
 };
 
-var localStream;
-var remoteStream;
-
-const localVideo = document.getElementById('localVideo');
-const remoteVideo = document.getElementById('remoteVideo');
-
 const pc = new RTCPeerConnection(pcConfig);
 
-var showaudio = false;
-var showvideo = false;
-
-function connect() {
-    alert('konnecting!!!');
-    startAction();
+pc.ontrack = ({ streams }) => {
+    debugLog('on track - setting remote stream', streams);
+    remoteVideo.srcObject = streams[0];
+    remoteVideo.onloadedmetadata = function (e) {
+        remoteVideo.play();
+    };
 }
-//const startButton = document.getElementById('startButton');
-//startButton.addEventListener('click', startAction);
+
+pc.oniceconnectionstatechange = () => {
+    debugLog('on iceconnectionstatechnge', pc.iceConnectionState);
+    if (pc.iceConnectionState === 'disconnected') remoteVideo.srcObject = null;
+}
+pc.onicecandidate = ({ candidate }) => {
+    //debugLog('on icecandidate', candidate);
+    send({ candidate });
+}
+pc.onnegotiationneeded = async () => {
+    await pc.setLocalDescription(await pc.createOffer());
+    debugLog('on onnegotiationneeded', pc.localDescription);
+    send({ sdp: pc.localDescription });
+}
+const localVideo = document.getElementById('localVideo');
+const remoteVideo = document.getElementById('remoteVideo');
+var showaudio = false;
+var showvideo = true;
+var localStream;
+var remoteStream;
+var vTrack; var aTrack;
+var vSender; var aSender;
+
+function toggleUI() {
+    if (showvideo) { $("#vidicon").removeClass("fas fa-video-slash"); $("#vidicon").addClass("fas fa-video"); }
+    else { $("#vidicon").removeClass("fas fa-video"); $("#vidicon").addClass("fas fa-video-slash"); }
+    if (showaudio) { $("#audicon").removeClass("fas fa-microphone-alt-slash"); $("#audicon").addClass("fas fa-microphone-alt"); }
+    else { $("#audicon").removeClass("fas fa-microphone-alt"); $("#audicon").addClass("fas fa-microphone-alt-slash"); }
+}
+
+toggleUI();
+
 function toggle(media) {
     if (media === 'video') showvideo = !showvideo;
     if (media === 'audio') showaudio = !showaudio;
-    if (showvideo) { $("#vidicon").removeClass("fas fa-video-slash"); $("#vidicon").addClass("fas fa-video"); }
-    else { $("#vidicon").removeClass("fas fa-video"); $("#vidicon").addClass("fas fa-video-slash");}
-    if (showaudio) { $("#audicon").removeClass("fas fa-microphone-alt-slash"); $("#audicon").addClass("fas fa-microphone-alt"); }
-    else { $("#audicon").removeClass("fas fa-microphone-alt"); $("#audicon").addClass("fas fa-microphone-alt-slash"); }
-
-    doAction();
+    toggleUI();
+    updateTracks();
 }
-function startAction() {
+
+function getVideo() {
     navigator.mediaDevices.getUserMedia({
         audio: true,
         video: video_constraints
     })
-        .then(gotStream)
+        .then(showVideo)
         .catch(function (e) {
             alert('getUserMedia() error: ' + e.name);
         });    
 }
 
-function gotStream(stream) {
-    debugLog('Adding local stream.');
+function showVideo(stream) {
+    debugLog('Showing local camera..');
     localStream = stream;
     localVideo.srcObject = localStream;
-
-    aTrack = localStream.getAudioTracks()[0];
-    aSender = pc.addTrack(aTrack, localStream);
+    addTracks();
+}
+function reconnect() {
+    if ((localStream === undefined)) { debugLog('No localstream to reconnect..'); return; }
+    pc.removeTrack(vSender); pc.removeTrack(aSender);
+    addTracks();
+}
+function addTracks() {
+    if ((localStream === undefined)) { debugLog('No localstream to addTracks..');return; }
 
     vTrack = localStream.getVideoTracks()[0];
     vSender = pc.addTrack(vTrack, localStream);
 
-    _vBitRate = 120; _aBitRate = 120;
-    const parameters = vSender.getParameters();
-    debugLog('Initial params..',parameters);
-
-    if (!parameters.encodings) {
-        parameters.encodings = [{}];
-    }
-    if (vSender.track.kind === "video") {
-        if (parameters.encodings.length > 0) {
-            if (_vBitRate == 0) {
-                delete parameters.encodings[0].maxBitrate;
-            } else {
-                parameters.encodings[0].maxBitrate = _vBitRate * 1000;
-            }
-        }
-    } else {
-        if (parameters.encodings.length > 0) {
-            if (_aBitRate == 0) {
-                delete parameters.encodings[0].maxBitrate;
-            } else {
-                parameters.encodings[0].maxBitrate = _vBitRate * 1000;
-            }
-        }
-    }
-
-    debugLog('Updated params..',parameters);
-    vSender.setParameters(parameters)
-    //vTrack.enabled = false;
-    //aTrack.enabled = false;
-
-    if (showvideo) { vTrack.enabled = true; } else { vTrack.enabled = false; }
-    if (showaudio) { aTrack.enabled = true; } else { aTrack.enabled = false; }
-    //debugLog(localStream);
+    aTrack = localStream.getAudioTracks()[0];
+    aSender = pc.addTrack(aTrack, localStream);
+    updateTracks();
+    //setBitRate(120, 120);
 }
 
-function doAction() {
+function setBitRate(_vBitRate, _aBitRate) {
+    const vparams = vSender.getParameters();
+    debugLog('Initial vparams..', vparams);
 
-    if (localStream === undefined) startAction();
-    else {
+    if (!vparams.encodings) { vparams.encodings = [{}]; }
+    if (vparams.encodings.length > 0) {
+        if (_vBitRate == 0) {
+            delete vparams.encodings[0].maxBitrate;
+        } else {
+            vparams.encodings[0].maxBitrate = _vBitRate * 1000;
+        }
+    }
+    debugLog('Final vparams..', vparams);
+    vSender.setParameters(parameters)
+
+    //const aparams = aSender.getParameters();
+    //debugLog('Initial aparams..', aparams);
+
+    //if (!aparams.encodings) { aparams.encodings = [{}]; }
+    //if (aparams.encodings.length > 0) {
+    //    if (_aBitRate == 0) {
+    //        delete aparams.encodings[0].maxBitrate;
+    //    } else {
+    //        aparams.encodings[0].maxBitrate = _aBitRate * 1000;
+    //    }
+    //}
+    //debugLog('Final aparams..', aparams);
+    //aSender.setParameters(aparams)
+}
+function updateTracks() {
+    if (localStream != undefined) {
         if (showvideo) { vTrack.enabled = true; } else { vTrack.enabled = false; }
         if (showaudio) { aTrack.enabled = true; } else { aTrack.enabled = false; }
     }
-
-
-    //for (const t of localStream.getTracks()) {
-    //    //debugLog('t.kind', t.kind);
-    //    if (t.kind === 'video' && showvideo) { vTrack.enabled = true; } else { vTrack.enabled = false; }
-    //    if (t.kind === 'audio' && showaudio) { aTrack.enabled = true; } else { aTrack.enabled = false; }
-    //    //pc.replaceTrack();
-    //}
 }
+
+
+//function connect() {
+//    //alert('konnecting!!!');
+//    startAction();
+//}
+//const startButton = document.getElementById('startButton');
+//startButton.addEventListener('click', startAction);
+
+//function startAction() {
+//    navigator.mediaDevices.getUserMedia({
+//        audio: true,
+//        video: video_constraints
+//    })
+//        .then(gotStream)
+//        .catch(function (e) {
+//            alert('getUserMedia() error: ' + e.name);
+//        });    
+//}
+
+//function gotStream(stream) {
+//    debugLog('Adding local stream.');
+//    localStream = stream;
+//    localVideo.srcObject = localStream;
+
+//    aTrack = localStream.getAudioTracks()[0];
+//    aSender = pc.addTrack(aTrack, localStream);
+
+//    vTrack = localStream.getVideoTracks()[0];
+//    vSender = pc.addTrack(vTrack, localStream);
+
+//    _vBitRate = 120; _aBitRate = 120;
+//    const parameters = vSender.getParameters();
+//    debugLog('Initial params..',parameters);
+
+//    if (!parameters.encodings) {
+//        parameters.encodings = [{}];
+//    }
+//    if (vSender.track.kind === "video") {
+//        if (parameters.encodings.length > 0) {
+//            if (_vBitRate == 0) {
+//                delete parameters.encodings[0].maxBitrate;
+//            } else {
+//                parameters.encodings[0].maxBitrate = _vBitRate * 1000;
+//            }
+//        }
+//    } else {
+//        if (parameters.encodings.length > 0) {
+//            if (_aBitRate == 0) {
+//                delete parameters.encodings[0].maxBitrate;
+//            } else {
+//                parameters.encodings[0].maxBitrate = _vBitRate * 1000;
+//            }
+//        }
+//    }
+
+//    debugLog('Updated params..',parameters);
+//    vSender.setParameters(parameters)
+//    //vTrack.enabled = false;
+//    //aTrack.enabled = false;
+
+//    doAction();
+//    //debugLog(localStream);
+//}
+
+//function doAction() {
+
+//    if (localStream != undefined) {
+//        if (showvideo) { vTrack.enabled = true; } else { vTrack.enabled = false; }
+//        if (showaudio) { aTrack.enabled = true; } else { aTrack.enabled = false; }
+//    }
+
+
+//    //for (const t of localStream.getTracks()) {
+//    //    //debugLog('t.kind', t.kind);
+//    //    if (t.kind === 'video' && showvideo) { vTrack.enabled = true; } else { vTrack.enabled = false; }
+//    //    if (t.kind === 'audio' && showaudio) { aTrack.enabled = true; } else { aTrack.enabled = false; }
+//    //    //pc.replaceTrack();
+//    //}
+//}
 
 //function endAction() {
 //    localStream = null;
@@ -165,26 +262,6 @@ function doAction() {
 //    debugLog(remoteStream);
 //}
 
-pc.ontrack = ({ streams }) => {
-    debugLog('on track - setting remote stream', streams);
-    remoteVideo.srcObject = streams[0];
-    remoteVideo.onloadedmetadata = function (e) {
-        remoteVideo.play();
-    };
-}
-pc.oniceconnectionstatechange = () => {
-    debugLog('on iceconnectionstatechnge', pc.iceConnectionState);
-    if (pc.iceConnectionState === 'disconnected') remoteVideo.srcObject = null;
-}
-pc.onicecandidate = ({ candidate }) => {
-    //debugLog('on icecandidate', candidate);
-    send({ candidate });
-}
-pc.onnegotiationneeded = async () => {
-    await pc.setLocalDescription(await pc.createOffer());
-    debugLog('on onnegotiationneeded', pc.localDescription);
-    send({ sdp: pc.localDescription });
-}
 
 //const sc = new localSocket(); // localStorage signaling hack
 //sc.onmessage = async ({ data: { sdp, candidate } }) => {
@@ -209,8 +286,7 @@ var rtcHUB = new signalR.HubConnectionBuilder().withUrl("/rtclitehub").withAutom
 rtcHUB.serverTimeoutInMilliseconds = 1000 * 60 * 10; 
 rtcHUB.start().then(function () {
     debugLog('SignalR Connected Successfully');
-    startAction();
-    //shareScreen();
+    getVideo();
 }).catch(function (err) {
     return console.error(err.toString());
 });
