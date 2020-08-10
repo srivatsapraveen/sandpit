@@ -73,16 +73,22 @@ function gotStream(stream) {
     vTrack = localStream.getVideoTracks()[0];
     vSender = pc.addTrack(vTrack, localStream);
 
-    //vTrack.enabled = true;
+    //vTrack.enabled = false;
     //aTrack.enabled = false;
 
+    if (showvideo) { vTrack.enabled = true; } else { vTrack.enabled = false; }
+    if (showaudio) { aTrack.enabled = true; } else { aTrack.enabled = false; }
     //debugLog(localStream);
 }
 
 function doAction() {
 
-    //if (showvideo) { vTrack.enabled = true; } else { vTrack.enabled = false; }
-    //if (showaudio) { aTrack.enabled = true; } else { aTrack.enabled = false; }
+    if (localStream === undefined) startAction();
+    else {
+        if (showvideo) { vTrack.enabled = true; } else { vTrack.enabled = false; }
+        if (showaudio) { aTrack.enabled = true; } else { aTrack.enabled = false; }
+    }
+
 
     //for (const t of localStream.getTracks()) {
     //    //debugLog('t.kind', t.kind);
