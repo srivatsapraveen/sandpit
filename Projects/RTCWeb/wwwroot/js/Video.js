@@ -28,6 +28,14 @@ var pcConfig = {
           }]
 };
 
+var video_constraints = {
+    mandatory: {
+        maxHeight: 240,
+        maxWidth: 320
+    },
+    optional: []
+};
+
 var localStream;
 var remoteStream;
 
@@ -39,6 +47,10 @@ const pc = new RTCPeerConnection(pcConfig);
 var showaudio = false;
 var showvideo = false;
 
+function connect() {
+    alert('konnecting!!!');
+    startAction();
+}
 //const startButton = document.getElementById('startButton');
 //startButton.addEventListener('click', startAction);
 function toggle(media) {
@@ -54,7 +66,7 @@ function toggle(media) {
 function startAction() {
     navigator.mediaDevices.getUserMedia({
         audio: true,
-        video: true
+        video: video_constraints
     })
         .then(gotStream)
         .catch(function (e) {
@@ -73,6 +85,33 @@ function gotStream(stream) {
     vTrack = localStream.getVideoTracks()[0];
     vSender = pc.addTrack(vTrack, localStream);
 
+    _vBitRate = 120; _aBitRate = 120;
+    const parameters = vSender.getParameters();
+    debugLog('Initial params..',parameters);
+
+    if (!parameters.encodings) {
+        parameters.encodings = [{}];
+    }
+    if (vSender.track.kind === "video") {
+        if (parameters.encodings.length > 0) {
+            if (_vBitRate == 0) {
+                delete parameters.encodings[0].maxBitrate;
+            } else {
+                parameters.encodings[0].maxBitrate = _vBitRate * 1000;
+            }
+        }
+    } else {
+        if (parameters.encodings.length > 0) {
+            if (_aBitRate == 0) {
+                delete parameters.encodings[0].maxBitrate;
+            } else {
+                parameters.encodings[0].maxBitrate = _vBitRate * 1000;
+            }
+        }
+    }
+
+    debugLog('Updated params..',parameters);
+    vSender.setParameters(parameters)
     //vTrack.enabled = false;
     //aTrack.enabled = false;
 
