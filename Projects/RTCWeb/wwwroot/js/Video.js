@@ -37,10 +37,7 @@ function toggle(media) {
     if (showaudio) { $("#audicon").removeClass("fas fa-microphone-alt-slash"); $("#audicon").addClass("fas fa-microphone-alt"); }
     else { $("#audicon").removeClass("fas fa-microphone-alt"); $("#audicon").addClass("fas fa-microphone-alt-slash"); }
 
-    if (showvideo || showaudio)
-        startAction();
-    else
-        endAction();
+    doAction();
 }
 function startAction() {
     navigator.mediaDevices.getUserMedia({
@@ -68,12 +65,26 @@ function gotStream(stream) {
     console.log(localStream);
 }
 
+function doAction() {
+    if ((localStream === undefined)) { startAction(); }
+    else {
+        for (const t of localStream.getTracks()) {
+            console.log('t.kind', t.kind);
+            if (t.kind === 'video' && showvideo) { t.muted = true; } else { t.muted = false; }
+            if (t.kind === 'audio' && showaudio) { t.muted = true; } else { t.muted = false; }
+        }
+    }
+}
+
 function endAction() {
     localStream = null;
     localVideo.srcObject = null;
 
     const senders = pc.getSenders();
-    senders.forEach((sender) => pc.removeTrack(sender));
+    senders.forEach((sender) => {
+
+        pc.removeTrack(sender)
+    });
 }
 //startAction(false,false);
 
