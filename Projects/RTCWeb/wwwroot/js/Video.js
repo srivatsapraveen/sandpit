@@ -1,10 +1,22 @@
-﻿//https://jsfiddle.net/jib1/2yLakm60
+﻿//Basic RTC with local signalling https://jsfiddle.net/jib1/2yLakm60
+//Mute Audio/Video https://jsfiddle.net/j1elo/n3tf0rtL/
+//https://github.com/Kurento/experiments/blob/master/WebRTC/mute-tracks/mute-tracks.js (also has debug info for getstats())
 
 //var pcConfig = {
 //    'iceServers': [{
 //        'urls': 'stun:stun.l.google.com:19302'
 //    }]
 //};
+var logHUBready = false;
+var logHUB = new signalR.HubConnectionBuilder().withUrl("/loghub").withAutomaticReconnect().build();
+logHUB.serverTimeoutInMilliseconds = 1000 * 60 * 10;
+logHUB.start().then(function () {
+    console.log('LogHUB Started Successfully');
+    logHUBready = true;
+}).catch(function (err) {
+    return console.error(err.toString());
+});
+
 
 var pcConfig = {
       iceServers: [{
@@ -41,8 +53,8 @@ function toggle(media) {
 }
 function startAction() {
     navigator.mediaDevices.getUserMedia({
-        audio: showaudio,
-        video: showvideo
+        audio: true,
+        video: true
     })
         .then(gotStream)
         .catch(function (e) {
@@ -51,95 +63,99 @@ function startAction() {
 }
 
 function gotStream(stream) {
-    console.log('Adding local stream.');
+    debugLog('Adding local stream.');
     localStream = stream;
-    localVideo.srcObject = stream;
-    //console.log('Adding stream to PC');
-    //NOTE : Add stream and onadd stream are deprecated!!!
-    //pc.addStream(localStream);
+    localVideo.srcObject = localStream;
 
-    for (const track of stream.getTracks()) {
-        pc.addTrack(track, stream);
-    }
+    aTrack = localStream.getAudioTracks()[0];
+    aSender = pc.addTrack(aTrack, localStream);
 
-    console.log(localStream);
+    vTrack = localStream.getVideoTracks()[0];
+    vSender = pc.addTrack(vTrack, localStream);
+
+    //vTrack.enabled = true;
+    //aTrack.enabled = false;
+
+    //debugLog(localStream);
 }
 
 function doAction() {
-    if ((localStream === undefined)) { startAction(); }
-    else {
-        for (const t of localStream.getTracks()) {
-            console.log('t.kind', t.kind);
-            if (t.kind === 'video' && showvideo) { t.muted = true; } else { t.muted = false; }
-            if (t.kind === 'audio' && showaudio) { t.muted = true; } else { t.muted = false; }
-        }
-    }
+
+    //if (showvideo) { vTrack.enabled = true; } else { vTrack.enabled = false; }
+    //if (showaudio) { aTrack.enabled = true; } else { aTrack.enabled = false; }
+
+    //for (const t of localStream.getTracks()) {
+    //    //debugLog('t.kind', t.kind);
+    //    if (t.kind === 'video' && showvideo) { vTrack.enabled = true; } else { vTrack.enabled = false; }
+    //    if (t.kind === 'audio' && showaudio) { aTrack.enabled = true; } else { aTrack.enabled = false; }
+    //    //pc.replaceTrack();
+    //}
 }
 
-function endAction() {
-    localStream = null;
-    localVideo.srcObject = null;
+//function endAction() {
+//    localStream = null;
+//    localVideo.srcObject = null;
 
-    const senders = pc.getSenders();
-    senders.forEach((sender) => {
+//    const senders = pc.getSenders();
+//    senders.forEach((sender) => {
 
-        pc.removeTrack(sender)
-    });
-}
+//        pc.removeTrack(sender)
+//    });
+//}
 //startAction(false,false);
 
 //pc.onaddstream = handleRemoteStreamAdded;
 
 //function handleRemoteStreamAdded(event) {
-//    console.log('Remote stream added.');
+//    debugLog('Remote stream added.');
 //    remoteStream = event.stream;
 //    remoteVideo.srcObject = remoteStream;
 
 //    //Play it
-//    console.log('Remote stream playing.');
+//    debugLog('Remote stream playing.');
 //    remoteVideo.autoplay = true;
 //    remoteVideo.playsInline = true;
 //    remoteVideo.muted = true;
 
-//    console.log(remoteStream);
+//    debugLog(remoteStream);
 //}
 
 pc.ontrack = ({ streams }) => {
-    console.log('on track - setting remote stream', streams);
+    debugLog('on track - setting remote stream', streams);
     remoteVideo.srcObject = streams[0];
     remoteVideo.onloadedmetadata = function (e) {
         remoteVideo.play();
     };
 }
 pc.oniceconnectionstatechange = () => {
-    console.log('on iceconnectionstatechnge', pc.iceConnectionState);
+    debugLog('on iceconnectionstatechnge', pc.iceConnectionState);
     if (pc.iceConnectionState === 'disconnected') remoteVideo.srcObject = null;
 }
 pc.onicecandidate = ({ candidate }) => {
-    //console.log('on icecandidate', candidate);
+    //debugLog('on icecandidate', candidate);
     send({ candidate });
 }
 pc.onnegotiationneeded = async () => {
     await pc.setLocalDescription(await pc.createOffer());
-    console.log('on onnegotiationneeded', pc.localDescription);
+    debugLog('on onnegotiationneeded', pc.localDescription);
     send({ sdp: pc.localDescription });
 }
 
 //const sc = new localSocket(); // localStorage signaling hack
 //sc.onmessage = async ({ data: { sdp, candidate } }) => {
 //    if (sdp) {
-//        console.log('sdp', sdp);
+//        debugLog('sdp', sdp);
 //        await pc.setRemoteDescription(sdp);
 //        if (sdp.type == "offer") {
 //            await pc.setLocalDescription(await pc.createAnswer());
-//            console.log('answer', pc.localDescription);
+//            debugLog('answer', pc.localDescription);
 //            sc.send({ sdp: pc.localDescription });
 //        }
 //        else {
-//          console.log('got answer', sdp);
+//          debugLog('got answer', sdp);
 //        }
 //    } else if (candidate) {
-//        console.log('candidate', candidate);
+//        debugLog('candidate', candidate);
 //        await pc.addIceCandidate(candidate);
 //    }
 //}
@@ -147,7 +163,8 @@ pc.onnegotiationneeded = async () => {
 var rtcHUB = new signalR.HubConnectionBuilder().withUrl("/rtclitehub").withAutomaticReconnect().build();
 rtcHUB.serverTimeoutInMilliseconds = 1000 * 60 * 10; 
 rtcHUB.start().then(function () {
-    console.log('SignalR Connected Successfully');
+    debugLog('SignalR Connected Successfully');
+    startAction();
     //shareScreen();
 }).catch(function (err) {
     return console.error(err.toString());
@@ -155,29 +172,38 @@ rtcHUB.start().then(function () {
 
 
 function send(message) {
-    //console.log('Sending...' + JSON.stringify(message));
+    //debugLog('Sending...' + JSON.stringify(message));
     rtcHUB.invoke("Send", JSON.stringify(message)).catch(function (err) {
         return console.error('COULD NOT SEND TO SERVER:' + err.toString());
     });
 }
 
 rtcHUB.on("Receive", function (message) {
-    //console.log('Recieving ...' + message);
+    //debugLog('Recieving ...' + message);
     var msg = JSON.parse(message);    
     if (('sdp' in msg)) {
-        console.log('sdp' + msg.sdp.type);
+        debugLog('sdp' + msg.sdp.type);
         pc.setRemoteDescription(msg.sdp);
         if ((msg.sdp.type === "offer")) {
-            console.log('got offer sending answer', pc.localDescription);
+            debugLog('got offer sending answer', pc.localDescription);
             pc.setLocalDescription(pc.createAnswer());
-            console.log('answer', pc.localDescription);
+            debugLog('answer', pc.localDescription);
             send({ sdp: pc.localDescription });
         }
         //else {
-        //    console.log('got answer', sdp);
+        //    debugLog('got answer', sdp);
         //}
     } else if ('candidate' in msg) {
-        console.log('candidate', candidate);
+        debugLog('candidate', candidate);
         pc.addIceCandidate(candidate);
     }
 });
+
+function debugLog(message) {
+    console.log(message);
+    msg = message;
+    if (logHUBready)
+        logHUB.invoke("Log", user, JSON.stringify(msg)).catch(function (err) {
+            return console.error('COULD NOT SEND TO SERVER:' + err.toString());
+        });
+}

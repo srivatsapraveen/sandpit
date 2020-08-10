@@ -24,16 +24,16 @@
                 </div>*@
                 <p id="instructions" class="mt-4 mb-0">Please enter a user name.</p>
                 <div id="user-id-input-div">
-                    <input type="text" id="uid" value="JohnDoe" name="userid">
+                    <input type="text" id="uid" placeholder="JohnDoe" name="userid" required>
                     <br />
                 </div>
                 <div id="input-buttons" class="mt-4">
-                    <button type="submit" value="Submit" formaction="/home/test">JOIN Test ROOM</button>
-                    <button type="submit" value="Submit" formaction="/home/chat">JOIN Chat ROOM</button>
+                    @*<button type="submit" value="Submit" formaction="/home/test">JOIN Test ROOM</button>
+                    <button type="submit" value="Submit" formaction="/home/chat">JOIN Chat ROOM</button>*@
                     <button type="submit" value="Submit" formaction="/home/room">JOIN Video ROOM</button>
                 </div>
             </form>
-            <label class="error-label hidden mt-4" for="user-id-input" id="user-id-input-label">Room/User name must be 5 or more characters and include only letters, numbers, underscore and hyphen.</label>
+            <label class="error-label hidden mt-4" for="user-id-input" id="user-id-input-label">Only 2 users allowed. Keep names unique for debugging.</label>
         </div>
     </div>
 </div>

@@ -64,7 +64,7 @@ namespace RTCWeb
                     name: "default",
                     pattern: "{controller=Home}/{action=Index}/{id?}");
                 endpoints.MapHub<ChatHub>("/chathub");
-                //endpoints.MapHub<RTCHub>("/rtchub");
+                endpoints.MapHub<LogHub>("/loghub");
                 endpoints.MapHub<RTCLiteHub>("/RTCLiteHub", options =>
                 {
                     options.ApplicationMaxBufferSize = 1024000;

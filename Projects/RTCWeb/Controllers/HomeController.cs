@@ -46,6 +46,13 @@ namespace RTCWeb.Controllers
             return View();
         }
 
+        public IActionResult DebugLog()
+        {
+            ViewBag.RoomID = "DEBUG MONITOR";
+            ViewBag.UserID = "WEBRTC ADMIN";
+            return View();
+        }
+
         public IActionResult Privacy()
         {
             return View();

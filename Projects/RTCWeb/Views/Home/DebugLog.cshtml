@@ -1,0 +1,39 @@
+﻿@{
+    ViewData["Title"] = "DebugLog";
+}
+
+    <div class="row">
+        @*<div class="col-md-4 mt-2">
+            <div>
+                <div class="input-group mb-3">
+                    <input type="text" class="form-control" id="user0">
+                </div>
+            </div>
+            <div class="bg-light pt-4" style="height: 100%; overflow-y: scroll">
+                <ul id="log0List" class="pr-2"></ul>
+            </div>
+        </div>*@
+        <div class="col-md-6 mt-2">
+            <div>
+                <div class="input-group mb-3">
+                    <input type="text" class="form-control" id="user1" disabled>
+                </div>
+            </div>
+            <div class="bg-light pt-4" style="height: 450px; overflow-y: scroll">
+                <ul id="log1List" class="pr-2"></ul>
+            </div>
+        </div>
+
+        <div class="col-md-6 mt-2">
+            <div>
+                <div class="input-group mb-3">
+                    <input type="text" class="form-control" id="user2" disabled>
+                </div>
+            </div>
+            <div class="bg-light pt-4" style="height: 450px; overflow-y: scroll">
+                <ul id="log2List" class="pr-2"></ul>
+            </div>
+        </div>
+    </div>
+<script src="~/js/DebugLog.js"></script>
+
