@@ -57,7 +57,7 @@ pc.onicecandidate = ({ candidate }) => {
 pc.onnegotiationneeded = async () => {
     await pc.setLocalDescription(await pc.createOffer());
     debugLog('on onnegotiationneeded', pc.localDescription);
-    pc.localDescription = setMediaBitrates(pc.localDescription);
+    //pc.localDescription = setMediaBitrates(pc.localDescription);
     send({ sdp: pc.localDescription });
 }
 const localVideo = document.getElementById('localVideo');
@@ -121,7 +121,7 @@ function addTracks() {
 }
 
 function updateTracks() {
-    if (localStream != undefined) {
+    if (localStream !== undefined) {
         if (showvideo) { vTrack.enabled = true; } else { vTrack.enabled = false; }
         if (showaudio) { aTrack.enabled = true; } else { aTrack.enabled = false; }
     }
