@@ -5,6 +5,8 @@
 //https://webrtc.github.io/samples/src/content/peerconnection/constraints/
 //https://blog.mozilla.org/webrtc/perfect-negotiation-in-webrtc/
 
+var isMaster = true;
+
 //ondevicechanged
 var _br = 60;var _fr = 15;var _bw;
 var _resx = 240; var _resy = 320;
@@ -61,7 +63,8 @@ pc.ontrack = ({ streams }) => {
 }
 
 pc.oniceconnectionstatechange = () => {
-    debugLog('on iceconnectionstatechnge:'+ pc.iceConnectionState);
+    debugLog('on iceconnectionstatechnge:' + pc.iceConnectionState + '(' + isMaster + ')');
+    if (pc.iceConnectionState === 'new' && isMaster) reconnect();
     if (pc.iceConnectionState === 'disconnected') remoteVideo.srcObject = null;
 }
 pc.onicecandidate = ({ candidate }) => {
@@ -292,6 +295,7 @@ rtcHUB.on("Receive", function (message) {
             pc.setLocalDescription(pc.createAnswer());
             //pc.localDescription = setMediaBitrates(pc.localDescription);
             debugLog('sending answer:', pc.localDescription);
+            isMaster = false;
             send({ sdp: pc.localDescription });
         }
         else {
