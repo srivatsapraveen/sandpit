@@ -9,7 +9,7 @@ namespace RTCWeb.Hubs
     {
         public async Task Log(string user,string message)
         {
-            await Clients.Others.SendAsync("DebugLog", user, message);
+            await Clients.Others.SendAsync("DebugLog", user, DateTime.UtcNow.ToString(@"hh:mm:ss:FFF") + ":" + message);
         }
     }
 }

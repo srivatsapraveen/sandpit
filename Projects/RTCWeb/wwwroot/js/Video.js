@@ -45,7 +45,7 @@ var video_constraints = {
 const pc = new RTCPeerConnection(pcConfig);
 
 pc.ontrack = ({ streams }) => {
-    debugLog('on track - setting remote stream', streams);
+    debugLog('on track - setting remote stream'+ streams.track.type);
     remoteVideo.srcObject = streams[0];
     remoteVideo.onloadedmetadata = function (e) {
         remoteVideo.play();
@@ -53,7 +53,7 @@ pc.ontrack = ({ streams }) => {
 }
 
 pc.oniceconnectionstatechange = () => {
-    debugLog('on iceconnectionstatechnge', pc.iceConnectionState);
+    debugLog('on iceconnectionstatechnge:'+ pc.iceConnectionState);
     if (pc.iceConnectionState === 'disconnected') remoteVideo.srcObject = null;
 }
 pc.onicecandidate = ({ candidate }) => {
@@ -62,7 +62,7 @@ pc.onicecandidate = ({ candidate }) => {
 }
 pc.onnegotiationneeded = async () => {
     await pc.setLocalDescription(await pc.createOffer());
-    debugLog('on onnegotiationneeded', pc.localDescription);
+    debugLog('on onnegotiationneeded:' + pc.iceConnectionState);
     //pc.localDescription = setMediaBitrates(pc.localDescription);
     send({ sdp: pc.localDescription });
 }
