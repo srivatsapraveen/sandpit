@@ -157,9 +157,13 @@ function showVideo(stream) {
     addTracks();
 }
 function reconnect() {
-    if ((localStream === undefined)) { debugLog('No localstream to reconnect..'); return; }
-    pc.removeTrack(vSender); pc.removeTrack(aSender);
-    addTracks();
+    if ((localStream === undefined)) {
+        debugLog('No localstream ... recreating...'); getVideo();
+    }
+    else {
+        pc.removeTrack(vSender); pc.removeTrack(aSender);
+        addTracks();
+    }
 }
 function addTracks() {
     if ((localStream === undefined)) { debugLog('No localstream to addTracks..');return; }
