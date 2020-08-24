@@ -10,12 +10,11 @@
         <video id="remoteVideo" autoplay playsinline style="background-color:black;height:370px;width:100%"></video>
 
         <button id="btnConnect" style="width:40px;float:right" onclick="reconnect();"><i id="rtcicon" class="fas fa-link"></i></button>
-        <button id="btnConnect" style="width:40px;float:right" onclick="printstats();"><i id="rtcicon" class="fas fa-chart-pie"></i></button>
         <button id="btnVideo" style="width:40px" onclick="toggle('video');"><i id="vidicon" class="fas fa-video-slash"></i></button>
         <button id="btnAudio" style="width:40px" onclick="toggle('audio');"><i id="audicon" class="fas fa-microphone-alt-slash"></i></button>
-
-        <label for="bitrate">BR:</label>
-        <select id="bitrate" name="bitrate" onchange="onbrchange()">
+        <label for="bitrate">BitRate:</label>
+        <br />
+        <select id="bitrate" name="bitrate" onchange="onbitratechange()">
             <option value="20">20</option>
             <option value="60">60</option>
             <option value="120">120</option>
@@ -24,24 +23,11 @@
             <option value="1240">1240</option>
             <option value="2400">2400</option>
         </select>
-        <label for="framerate">FR:</label>
-        <select id="framerate" name="framerate" onchange="onfrchange()">
+        <select id="frameraterate" name="framerate" onchange="onframeratechange()">
             <option value="15">15</option>
             <option value="30">30</option>
             <option value="60">60</option>
         </select>
-        @*<label for="bandwidth">BW:</label>
-        <select id="bandwidth" name="bandwidth" onchange="onbwchange()">
-            <option value="15">15</option>
-            <option value="30">30</option>
-            <option value="60">60</option>
-        </select>
-        <label for="res">RES:</label>
-        <select id="res" name="res" onchange="onreschange()">
-            <option value="15">15</option>
-            <option value="30">30</option>
-            <option value="60">60</option>
-        </select>*@
 
         @*<button id="showVideo" onclick="init()">Open camera</button>
         <button id="startButton">Start</button>

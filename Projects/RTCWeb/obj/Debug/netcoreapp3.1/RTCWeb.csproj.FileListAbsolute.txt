@@ -347,3 +347,4 @@ C:\Rubix-Works\Source\srivatsapraveen\sandpit\Projects\RTCWeb\obj\Debug\netcorea
 C:\Rubix-Works\Source\srivatsapraveen\sandpit\Projects\RTCWeb\obj\Debug\netcoreapp3.1\RTCWeb.pdb
 C:\Rubix-Works\Source\srivatsapraveen\sandpit\Projects\RTCWeb\obj\Debug\netcoreapp3.1\RTCWeb.genruntimeconfig.cache
 C:\Rubix-Works\Source\srivatsapraveen\sandpit\Projects\RTCWeb\obj\Debug\netcoreapp3.1\Razor\Views\Home\DebugLog.cshtml.g.cs
+C:\Rubix-Works\Source\srivatsapraveen\sandpit\Projects\RTCWeb\obj\Debug\netcoreapp3.1\Razor\Views\Home\Landing.cshtml.g.cs

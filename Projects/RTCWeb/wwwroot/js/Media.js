@@ -5,8 +5,6 @@
 //https://webrtc.github.io/samples/src/content/peerconnection/constraints/
 
 //ondevicechanged
-var _br;var _fr;var _bw;
-var _resx; var resy;
 
 var logHUBready = false;
 var logHUB = new signalR.HubConnectionBuilder().withUrl("/loghub").withAutomaticReconnect().build();
@@ -44,30 +42,8 @@ var video_constraints = {
 
 const pc = new RTCPeerConnection(pcConfig);
 
-pc.ontrack = ({ streams }) => {
-    debugLog('on track - setting remote stream', streams);
-    remoteVideo.srcObject = streams[0];
-    remoteVideo.onloadedmetadata = function (e) {
-        remoteVideo.play();
-    };
-}
 
-pc.oniceconnectionstatechange = () => {
-    debugLog('on iceconnectionstatechnge', pc.iceConnectionState);
-    if (pc.iceConnectionState === 'disconnected') remoteVideo.srcObject = null;
-}
-pc.onicecandidate = ({ candidate }) => {
-    //debugLog('on icecandidate', candidate);
-    send({ candidate });
-}
-pc.onnegotiationneeded = async () => {
-    await pc.setLocalDescription(await pc.createOffer());
-    debugLog('on onnegotiationneeded', pc.localDescription);
-    //pc.localDescription = setMediaBitrates(pc.localDescription);
-    send({ sdp: pc.localDescription });
-}
 const localVideo = document.getElementById('localVideo');
-const remoteVideo = document.getElementById('remoteVideo');
 var showaudio = false;
 var showvideo = true;
 var localStream;
@@ -91,23 +67,12 @@ function toggle(media) {
     updateTracks();
 }
 
-function onbrchange() {
-    _br = $("#bitrate").children("option:selected").val();
-    setBitRate(_br, _br);
+function onbitratechange() {
+    alert($("#bitrate").te);
 }
 
-function onfrchange() {
-    _fr = $("#framerate").children("option:selected").val();
-    setFrameRate(_fr, _fr);
-}
-
-function onbwchange() {
-    _bw = $("#bandwidth").children("option:selected").val();
-    setBandwidth(_bw, _bw);
-}
-
-function onreschange() {
-    alert($("#res").children("option:selected").val());
+function onframeratechange() {
+    alert($("#framerate").value);
 }
 
 function getVideo() {
@@ -154,7 +119,6 @@ function updateTracks() {
 }
 
 function setFrameRate(_vFrameRate, _aFrameRate) {
-    alert(_vFrameRate);
     pc.getSenders().forEach(function (sender) {
         if (sender.track !== null) {
             console.log("Sender TRACK:" + sender.track.kind);
@@ -190,7 +154,6 @@ function setFrameRate(_vFrameRate, _aFrameRate) {
 }
 
 function setBitRate(_vBitRate, _aBitRate) {
-    alert(_vBitRate);
     pc.getSenders().forEach(function (sender) {
         if (sender.track !== null) {
             console.log("Sender TRACK:" + sender.track.kind);
@@ -225,119 +188,6 @@ function setBitRate(_vBitRate, _aBitRate) {
     });
 }
 
-var rtcHUB = new signalR.HubConnectionBuilder().withUrl("/rtclitehub").withAutomaticReconnect().build();
-rtcHUB.serverTimeoutInMilliseconds = 1000 * 60 * 10; 
-rtcHUB.start().then(function () {
-    debugLog('SignalR Connected Successfully');
-    getVideo();
-}).catch(function (err) {
-    return console.error(err.toString());
-});
-
-function send(message) {
-    //debugLog('Sending...' + JSON.stringify(message));
-    rtcHUB.invoke("Send", JSON.stringify(message)).catch(function (err) {
-        return console.error('COULD NOT SEND TO SERVER:' + err.toString());
-    });
-}
-
-rtcHUB.on("Receive", function (message) {
-    //debugLog('Recieving ...' + message);
-    var msg = JSON.parse(message);    
-    if (('sdp' in msg)) {
-        debugLog('sdp' + msg.sdp.type);
-        pc.setRemoteDescription(msg.sdp);
-        if ((msg.sdp.type === "offer")) {
-            debugLog('got offer sending answer', pc.localDescription);
-            pc.setLocalDescription(pc.createAnswer());
-            pc.localDescription = setMediaBitrates(pc.localDescription);
-            debugLog('answer', pc.localDescription);
-            send({ sdp: pc.localDescription });
-        }
-        //else {
-        //    debugLog('got answer', sdp);
-        //}
-    } else if ('candidate' in msg) {
-        debugLog('candidate', candidate);
-        pc.addIceCandidate(candidate);
-    }
-});
-
-function setMediaBitrates(sdp) {
-    return sdp;
-    //return setMediaBitrate(setMediaBitrate(sdp, "video", 100), "audio", 50);
-}
-
-function setMediaBitrate(sdp, mediaType, bitrate) {
-    let sdpLines = sdp.toString().split('\n'),
-        mediaLineIndex = -1,
-        mediaLine = 'm =' + mediaType,
-        bitrateLineIndex = -1,
-        bitrateLine = 'b = AS: ' + bitrate;
-
-    mediaLineIndex = sdpLines.findIndex(line => line.startsWith(mediaLine));
-
-    // If we find a line matching “m={mediaType}”
-    if (mediaLineIndex && mediaLineIndex < sdpLines.length) {
-        // Skip the media line
-        bitrateLineIndex = mediaLineIndex + 1;
-
-        // Skip both i=* and c=* lines (bandwidths limiters have to come afterwards)
-        while (sdpLines[bitrateLineIndex].startsWith('i=') || sdpLines[bitrateLineIndex].startsWith('c=')) {
-            bitrateLineIndex++;
-        }
-
-        if (sdpLines[bitrateLineIndex].startsWith('b=')) {
-            // If the next line is a b=* line, replace it with our new bandwidth
-            sdpLines[bitrateLineIndex] = bitrateLine;
-        } else {
-            // Otherwise insert a new bitrate line.
-            sdpLines.splice(bitrateLineIndex, 0, bitrateLine);
-        }
-    }
-
-    // Then return the updated sdp content as a string
-    return sdpLines.join('\n');
-}
-
-function setMediaBitrate_old(sdp, media, bitrate) {
-    var lines = sdp.toString().split("\n");
-    var line = -1;
-    for (var i = 0; i < lines.length; i++) {
-        if (lines[i].indexOf("m=" + media) === 0) {
-            line = i;
-            break;
-        }
-    }
-    if (line === -1) {
-        console.debug("Could not find the m line for", media);
-        return sdp;
-    }
-    console.debug("Found the m line for", media, "at line", line);
-
-    // Pass the m line
-    line++;
-
-    // Skip i and c lines
-    while (lines[line].indexOf("i=") === 0 || lines[line].indexOf("c=") === 0) {
-        line++;
-    }
-
-    // If we're on a b line, replace it
-    if (lines[line].indexOf("b") === 0) {
-        console.debug("Replaced b line at line", line);
-        lines[line] = "b=AS:" + bitrate;
-        return lines.join("\n");
-    }
-
-    // Add a new b line
-    console.debug("Adding new b line before line", line);
-    var newLines = lines.slice(0, line)
-    newLines.push("b=AS:" + bitrate)
-    newLines = newLines.concat(lines.slice(line, lines.length))
-    return newLines.join("\n")
-}
-
 function debugLog(message) {
     console.log(message);
     msg = message;
@@ -346,3 +196,69 @@ function debugLog(message) {
             return console.error('COULD NOT SEND TO SERVER:' + err.toString());
         });
 }
+
+var repeatInterval = 2000; // 2000 ms == 2 seconds
+getStats(pc, function (result) {
+    $("#statList").empty();
+    //document.getElementById("statList").children().remove();
+    var li;
+    li = document.createElement("li");
+    li.textContent = "Transport : " + result.connectionType.transport;
+    document.getElementById("statList").appendChild(document.createElement("li"));
+
+    li = document.createElement("li");
+    li.textContent = "Bandwidth Speed : " + result.bandwidth.speed ;
+    document.getElementById("statList").appendChild(li);
+
+    //result.connectionType.remote.ipAddress
+    //result.connectionType.remote.candidateType
+    //result.connectionType.transport
+
+    result.bandwidth.speed // bandwidth download speed (bytes per second)
+
+    // to access native "results" array
+    result.results.forEach(function (item) {
+        if (item.type === 'ssrc' && item.transportId === 'Channel-audio-1') {
+            var packetsLost = item.packetsLost;
+            var packetsSent = item.packetsSent;
+            var audioInputLevel = item.audioInputLevel;
+            var trackId = item.googTrackId; // media stream track id
+            var isAudio = item.mediaType === 'audio'; // audio or video
+            var isSending = item.id.indexOf('_send') !== -1; // sender or receiver
+
+            console.log('SendRecv type', item.id.split('_send').pop());
+            console.log('MediaStream track type', item.mediaType);
+        }
+    });
+}, repeatInterval);
+
+
+navigator.connection.addEventListener('change', logNetworkInfo);
+
+function logNetworkInfo() {
+    // Network type that browser uses
+
+    debugLog('         bandwidth: ' + navigator.connection.bandwidth);
+    debugLog('         metered: ' + navigator.connection.metered);
+
+    debugLog('         type: ' + navigator.connection.type);
+
+    // Effective bandwidth estimate
+    debugLog('     downlink: ' + navigator.connection.downlink + 'Mb/s');
+
+    // Effective round-trip time estimate
+    debugLog('          rtt: ' + navigator.connection.rtt + 'ms');
+
+    // Upper bound on the downlink speed of the first network hop
+    debugLog('  downlinkMax: ' + navigator.connection.downlinkMax + 'Mb/s');
+
+    // Effective connection type determined using a combination of recently
+    // observed rtt and downlink values: ' +
+    debugLog('effectiveType: ' + navigator.connection.effectiveType);
+
+    // True if the user has requested a reduced data usage mode from the user
+    // agent.
+    debugLog('     saveData: ' + navigator.connection.saveData);
+}
+
+logNetworkInfo();
