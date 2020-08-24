@@ -45,13 +45,6 @@ var video_constraints = {
 
 const pc = new RTCPeerConnection(pcConfig);
 
-//pc.ontrack = ({ streams: [stream] }) => {
-//    if (!stream.video) {
-//        stream.video = Object.assign(create(body, "video"), { width, height, autoplay: true });
-//    }
-//    stream.video.srcObject = stream;
-//};
-
 pc.ontrack = ({ streams }) => {
     debugLog('on track - setting remote stream');
     remoteVideo.srcObject = streams[0];
@@ -68,27 +61,13 @@ pc.onicecandidate = ({ candidate }) => {
     //debugLog('on icecandidate', candidate);
     send({ candidate });
 }
-let makingOffer = false, ignoreOffer = false;
-
 pc.onnegotiationneeded = async () => {
-    debugLog('on onnegotiationneeded:connstate=' + pc.iceConnectionState + '|sigState=' + pc.signalingState );
-    try {
-        makingOffer = true;
-
-        const offer = await pc.createOffer();
-        if (pc.signalingState !== "stable") return;
-        await pc.setLocalDescription(offer);
-
-        await pc.setLocalDescription(await pc.createOffer());
-        debugLog('Sending Offer..');
-        //pc.localDescription = setMediaBitrates(pc.localDescription);
-        send({ sdp: pc.localDescription });
-    } catch (e) {
-        debugLog(`ERROR ${e}`);
-    } finally {
-        makingOffer = false;
-    }
-};
+    debugLog('on onnegotiationneeded:' + pc.iceConnectionState);
+    await pc.setLocalDescription(await pc.createOffer());
+    debugLog('Sending Offer..');
+    //pc.localDescription = setMediaBitrates(pc.localDescription);
+    send({ sdp: pc.localDescription });
+}
 const localVideo = document.getElementById('localVideo');
 const remoteVideo = document.getElementById('remoteVideo');
 var showaudio = false;
@@ -176,7 +155,17 @@ function updateTracks() {
     }
 }
 
-function setFrameRate(p_vFrameRate, p_aFrameRate) {
+function getPCStats() {
+    let str = "";
+    if (localStream !== undefined) {
+        //str += "VTracks:" + vSender.;
+        //str += "ATracks:" + localStream.getAudioTracks().Count();
+    }
+    str += "ICEConState:" + pc.iceConnectionState;
+    return str;
+}
+
+function setFrameRate(_vFrameRate, _aFrameRate) {
     //alert(_vFrameRate);
     pc.getSenders().forEach(function (sender) {
         if (sender.track !== null) {
@@ -187,18 +176,18 @@ function setFrameRate(p_vFrameRate, p_aFrameRate) {
             }
             if (sender.track.kind !== undefined && sender.track.kind !== null && sender.track.kind === "video") {
                 if (parameters.encodings.length > 0) {
-                    if (p_vFrameRate === 0) {
+                    if (_vBitRate === 0) {
                         delete parameters.encodings[0].maxFramerate;
                     } else {
-                        parameters.encodings[0].maxFramerate = p_vFrameRate * 1000;
+                        parameters.encodings[0].maxFramerate = _vFrameRate * 1000;
                     }
                 }
             } else if (sender.track.kind !== undefined && sender.track.kind !== null && sender.track.kind === "audio") {
                 if (parameters.encodings.length > 0) {
-                    if (p_aFrameRate === 0) {
+                    if (_aBitRate === 0) {
                         delete parameters.encodings[0].maxFramerate;
                     } else {
-                        parameters.encodings[0].maxFramerate = p_aFrameRate * 1000;
+                        parameters.encodings[0].maxFramerate = _aFrameRate * 1000;
                     }
                 }
             }
@@ -212,7 +201,7 @@ function setFrameRate(p_vFrameRate, p_aFrameRate) {
     });
 }
 
-function setBitRate(p_vBitRate, p_aBitRate) {
+function setBitRate(_vBitRate, _aBitRate) {
     //alert(_vBitRate);
     pc.getSenders().forEach(function (sender) {
         if (sender.track !== null) {
@@ -223,18 +212,18 @@ function setBitRate(p_vBitRate, p_aBitRate) {
             }
             if (sender.track.kind !== undefined && sender.track.kind !== null && sender.track.kind === "video") {
                 if (parameters.encodings.length > 0) {
-                    if (p_vBitRate === 0) {
+                    if (_vBitRate === 0) {
                         delete parameters.encodings[0].maxBitrate;
                     } else {
-                        parameters.encodings[0].maxBitrate = p_vBitRate * 1000;
+                        parameters.encodings[0].maxBitrate = _vBitRate * 1000;
                     }
                 }
             } else if (sender.track.kind !== undefined && sender.track.kind !== null && sender.track.kind === "audio") {
                 if (parameters.encodings.length > 0) {
-                    if (p_aBitRate === 0) {
+                    if (_aBitRate === 0) {
                         delete parameters.encodings[0].maxBitrate;
                     } else {
-                        parameters.encodings[0].maxBitrate = p_aBitRate * 1000;
+                        parameters.encodings[0].maxBitrate = _aBitRate * 1000;
                     }
                 }
             }
@@ -269,26 +258,11 @@ rtcHUB.on("Receive", function (message) {
     var msg = JSON.parse(message);    
     if (('sdp' in msg)) {
         debugLog('Recieving:' + msg.sdp.type);
-        const offerCollision = msg.sdp.type == "offer" &&
-            (makingOffer || pc.signalingState != "stable");
-
-        //ignoreOffer = !polite && offerCollision;
-        //if (ignoreOffer) {
-        //    return;
-        //}
-        if (offerCollision) {
-            Promise.all([
-                pc.setLocalDescription({ type: "rollback" }),
-                pc.setRemoteDescription(msg.sdp)
-            ]);
-        } else {
-            pc.setRemoteDescription(msg.sdp);
-        }
-
+        pc.setRemoteDescription(msg.sdp);
         if ((msg.sdp.type === "offer")) {
             //debugLog('got offer:', pc.localDescription);
             pc.setLocalDescription(pc.createAnswer());
-            //pc.localDescription = setMediaBitrates(pc.localDescription);
+            pc.localDescription = setMediaBitrates(pc.localDescription);
             debugLog('sending answer:', pc.localDescription);
             send({ sdp: pc.localDescription });
         }
@@ -413,40 +387,38 @@ getStats(pc, function (result) {
     }
 
     statsOutput += `<div class="row"><div class="col-md-4">`;
-    statsOutput += `<h2>Shared</h2>\n<strong>isOfferer :</strong> ${result.isOfferer}<br>\n`;
-    statsOutput += `<strong>Bandwidth:</strong> ${bytesToSize(result.bandwidth.speed)}<br>\n`;
-    statsOutput += `<strong>Audio Latency:</strong> ${result.audio.latency + 'ms'}<br>\n`;
-    statsOutput += `<strong>Video Latency:</strong> ${result.video.latency + 'ms'}<br>\n`;
-    statsOutput += `<strong>ConnectionType :</strong> ${result.connectionType.systemNetworkType}<br>\n`;
-    statsOutput += `<strong>Encryption :</strong> ${result.encryption}<br>\n`;
-    statsOutput += `<strong>PeerConnection :</strong> ${pc.iceConnectionState}<br>\n`;
-    statsOutput += `<strong>Signalling State :</strong> ${pc.signalingState}<br>\n`;
-    
+    statsOutput += `<h2>Shared</h2>\n<strong>isOfferer :</strong> ${result.isOfferer}<br>\n`
+    statsOutput += `<strong>Bandwidth:</strong> ${bytesToSize(result.bandwidth.speed)}<br>\n`
+    statsOutput += `<strong>Audio Latency:</strong> ${result.audio.latency + 'ms'}<br>\n`
+    statsOutput += `<strong>Video Latency:</strong> ${result.video.latency + 'ms'}<br>\n`
+    statsOutput += `<strong>ConnectionType :</strong> ${result.connectionType.systemNetworkType}<br>\n`
+    statsOutput += `<strong>Encryption :</strong> ${result.encryption}<br>\n`
+    statsOutput += `<strong>PeerConnection :</strong> ${getPCStats()}<br>\n`
     
 
     statsOutput += `</div><div class="col-md-4">`;
-    statsOutput += `<h2>Local</h2>\n<strong>candidateType :</strong> ${result.connectionType.local.candidateType}<br>\n`;
-    statsOutput += `<strong>transport :</strong> ${result.connectionType.local.transport.join(', ')}<br>\n`;
-    statsOutput += `<strong>ipAddress :</strong> ${result.connectionType.local.ipAddress.join(', ')}<br>\n`;
-    statsOutput += `<strong>networkType :</strong> ${result.connectionType.local.networkType}<br>\n`;
+    statsOutput += `<h2>Local</h2>\n<strong>candidateType :</strong> ${result.connectionType.local.candidateType}<br>\n`
+    statsOutput += `<strong>transport :</strong> ${result.connectionType.local.transport.join(', ')}<br>\n`
+    statsOutput += `<strong>ipAddress :</strong> ${result.connectionType.local.ipAddress.join(', ')}<br>\n`
+    statsOutput += `<strong>networkType :</strong> ${result.connectionType.local.networkType}<br>\n`
 
-    statsOutput += `\n<strong>Resolution :</strong> ${result.resolutions.send.width + 'x' + result.resolutions.send.height}<br>\n`;
-    statsOutput += `<strong>FrameRate :</strong> ${bytesToSize(result.video.send.framerateMean)}<br>\n`;
-    statsOutput += `<strong>BitRate :</strong> ${bytesToSize(result.video.send.bitrateMean)}<br>\n`;
-    statsOutput += `<strong>Audio Bandwidth :</strong> ${bytesToSize(result.audio.send.availableBandwidth)}<br>\n`;
-    statsOutput += `<strong>Video Bandwidth :</strong> ${bytesToSize(result.video.send.availableBandwidth)}<br>\n`;
+    statsOutput += `\n<strong>Resolution :</strong> ${result.resolutions.send.width + 'x' + result.resolutions.send.height}<br>\n`
+    statsOutput += `<strong>FrameRate :</strong> ${bytesToSize(result.video.send.framerateMean)}<br>\n`
+    statsOutput += `<strong>BitRate :</strong> ${bytesToSize(result.video.send.bitrateMean)}<br>\n`
+    statsOutput += `<strong>Audio Bandwidth :</strong> ${bytesToSize(result.audio.send.availableBandwidth)}<br>\n`
+    statsOutput += `<strong>Video Bandwidth :</strong> ${bytesToSize(result.video.send.availableBandwidth)}<br>\n`
 
     statsOutput += `</div><div class="col-md-4">`;
-    statsOutput += `<h2>Remote</h2>\n<strong>candidateType :</strong> ${result.connectionType.remote.candidateType}<br>\n`;
-    statsOutput += `<strong>transport :</strong> ${result.connectionType.remote.transport.join(', ')}<br>\n`;
-    statsOutput += `<strong>ipAddress :</strong> ${result.connectionType.remote.ipAddress.join(', ')}<br>\n`;
-    statsOutput += `<strong>networkType :</strong> ${result.connectionType.remote.networkType}<br>\n`;
+    statsOutput += `<h2>Remote</h2>\n<strong>candidateType :</strong> ${result.connectionType.remote.candidateType}<br>\n`
+    statsOutput += `<strong>transport :</strong> ${result.connectionType.remote.transport.join(', ')}<br>\n`
+    statsOutput += `<strong>ipAddress :</strong> ${result.connectionType.remote.ipAddress.join(', ')}<br>\n`
+    statsOutput += `<strong>networkType :</strong> ${result.connectionType.remote.networkType}<br>\n`
 
-    statsOutput += `<strong>Resolution :</strong> ${result.resolutions.recv.width + 'x' + result.resolutions.recv.height}<br>\n`;
-    statsOutput += `<strong>FrameRate :</strong> ${bytesToSize(result.video.recv.framerateMean)}<br>\n`;
-    statsOutput += `<strong>BitRate :</strong> ${bytesToSize(result.video.recv.bitrateMean)}<br>\n`;
-    statsOutput += `<strong>Audio Bandwidth :</strong> ${bytesToSize(result.audio.recv.availableBandwidth)}<br>\n`;
-    statsOutput += `<strong>Video Bandwidth :</strong> ${bytesToSize(result.video.recv.availableBandwidth)}<br>\n`;
+    statsOutput += `<strong>Resolution :</strong> ${result.resolutions.recv.width + 'x' + result.resolutions.recv.height}<br>\n`
+    statsOutput += `<strong>FrameRate :</strong> ${bytesToSize(result.video.recv.framerateMean)}<br>\n`
+    statsOutput += `<strong>BitRate :</strong> ${bytesToSize(result.video.recv.bitrateMean)}<br>\n`
+    statsOutput += `<strong>Audio Bandwidth :</strong> ${bytesToSize(result.audio.recv.availableBandwidth)}<br>\n`
+    statsOutput += `<strong>Video Bandwidth :</strong> ${bytesToSize(result.video.recv.availableBandwidth)}<br>\n`
     statsOutput += `</div></div>`;
 
 
