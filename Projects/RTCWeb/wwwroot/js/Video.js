@@ -5,8 +5,8 @@
 //https://webrtc.github.io/samples/src/content/peerconnection/constraints/
 
 //ondevicechanged
-var _br;var _fr;var _bw;
-var _resx; var resy;
+var _br = 60;var _fr = 15;var _bw;
+var _resx = 240; var _resy = 320;
 
 var logHUBready = false;
 var logHUB = new signalR.HubConnectionBuilder().withUrl("/loghub").withAutomaticReconnect().build();
@@ -36,8 +36,8 @@ var pcConfig = {
 
 var video_constraints = {
     mandatory: {
-        maxHeight: 240,
-        maxWidth: 320
+        maxHeight: _resx,
+        maxWidth: _resy
     },
     optional: []
 };
@@ -142,8 +142,8 @@ function addTracks() {
     vSender = pc.addTrack(vTrack, localStream);
     aSender = pc.addTrack(aTrack, localStream);
     updateTracks();
-    setBitRate(120, 120);
-    setFrameRate(15, 10);
+    setBitRate(_br, _br);
+    setFrameRate(_fr, _fr);
 }
 
 function updateTracks() {
@@ -154,7 +154,7 @@ function updateTracks() {
 }
 
 function setFrameRate(_vFrameRate, _aFrameRate) {
-    alert(_vFrameRate);
+    //alert(_vFrameRate);
     pc.getSenders().forEach(function (sender) {
         if (sender.track !== null) {
             console.log("Sender TRACK:" + sender.track.kind);
@@ -190,7 +190,7 @@ function setFrameRate(_vFrameRate, _aFrameRate) {
 }
 
 function setBitRate(_vBitRate, _aBitRate) {
-    alert(_vBitRate);
+    //alert(_vBitRate);
     pc.getSenders().forEach(function (sender) {
         if (sender.track !== null) {
             console.log("Sender TRACK:" + sender.track.kind);
@@ -345,4 +345,133 @@ function debugLog(message) {
         logHUB.invoke("Log", user, JSON.stringify(msg)).catch(function (err) {
             return console.error('COULD NOT SEND TO SERVER:' + err.toString());
         });
+}
+
+function printstats() {
+    getStats(pc);
+}
+var repeatInterval = 2000; // 2000 ms == 2 seconds
+
+getStats(pc, function (result) {
+    //https://github.com/muaz-khan/getStats/blob/master/index.html
+    //console.log(JSON.stringify(result));
+    //alert('whoohoo');
+    //$("#statList").empty();
+    //document.getElementById("statList").children().remove();
+    let statsOutput = "";
+
+    if (result.connectionType.remote.candidateType.indexOf('relayed') !== -1) {
+        result.connectionType.remote.candidateType = 'TURN';
+    }
+    else {
+        result.connectionType.remote.candidateType = 'STUN';
+    }
+
+    if (result.connectionType.local.candidateType.indexOf('relayed') !== -1) {
+        result.connectionType.local.candidateType = 'TURN';
+    }
+    else {
+        result.connectionType.local.candidateType = 'STUN';
+    }
+
+    statsOutput += `<div class="row"><div class="col-md-4">`;
+    statsOutput += `<h2>Shared</h2>\n<strong>isOfferer :</strong> ${result.isOfferer}<br>\n`
+    statsOutput += `<strong>Bandwidth:</strong> ${bytesToSize(result.bandwidth.speed)}<br>\n`
+    statsOutput += `<strong>Audio Latency:</strong> ${result.audio.latency + 'ms'}<br>\n`
+    statsOutput += `<strong>Video Latency:</strong> ${result.video.latency + 'ms'}<br>\n`
+    statsOutput += `<strong>ConnectionType :</strong> ${result.connectionType.systemNetworkType}<br>\n`
+    statsOutput += `<strong>Encryption :</strong> ${result.encryption}<br>\n`
+
+    statsOutput += `</div><div class="col-md-4">`;
+    statsOutput += `<h2>Local</h2>\n<strong>candidateType :</strong> ${result.connectionType.local.candidateType}<br>\n`
+    statsOutput += `<strong>transport :</strong> ${result.connectionType.local.transport.join(', ')}<br>\n`
+    statsOutput += `<strong>ipAddress :</strong> ${result.connectionType.local.ipAddress.join(', ')}<br>\n`
+    statsOutput += `<strong>networkType :</strong> ${result.connectionType.local.networkType}<br>\n`
+
+    statsOutput += `\n<strong>Resolution :</strong> ${result.resolutions.send.width + 'x' + result.resolutions.send.height}<br>\n`
+    statsOutput += `<strong>FrameRate :</strong> ${bytesToSize(result.video.send.framerateMean)}<br>\n`
+    statsOutput += `<strong>BitRate :</strong> ${bytesToSize(result.video.send.bitrateMean)}<br>\n`
+    statsOutput += `<strong>Audio Bandwidth :</strong> ${bytesToSize(result.audio.send.availableBandwidth)}<br>\n`
+    statsOutput += `<strong>Video Bandwidth :</strong> ${bytesToSize(result.video.send.availableBandwidth)}<br>\n`
+
+    statsOutput += `</div><div class="col-md-4">`;
+    statsOutput += `<h2>Remote</h2>\n<strong>candidateType :</strong> ${result.connectionType.remote.candidateType}<br>\n`
+    statsOutput += `<strong>transport :</strong> ${result.connectionType.remote.transport.join(', ')}<br>\n`
+    statsOutput += `<strong>ipAddress :</strong> ${result.connectionType.remote.ipAddress.join(', ')}<br>\n`
+    statsOutput += `<strong>networkType :</strong> ${result.connectionType.remote.networkType}<br>\n`
+
+    statsOutput += `<strong>Resolution :</strong> ${result.resolutions.recv.width + 'x' + result.resolutions.recv.height}<br>\n`
+    statsOutput += `<strong>FrameRate :</strong> ${bytesToSize(result.video.recv.framerateMean)}<br>\n`
+    statsOutput += `<strong>BitRate :</strong> ${bytesToSize(result.video.recv.bitrateMean)}<br>\n`
+    statsOutput += `<strong>Audio Bandwidth :</strong> ${bytesToSize(result.audio.recv.availableBandwidth)}<br>\n`
+    statsOutput += `<strong>Video Bandwidth :</strong> ${bytesToSize(result.video.recv.availableBandwidth)}<br>\n`
+    statsOutput += `</div></div>`;
+
+
+    // to access native "results" array
+    result.results.forEach(function (item) {
+        //console.log(JSON.stringify(item));
+        if (item.type === 'ssrc' && item.transportId === 'Channel-audio-1') {
+            var packetsLost = item.packetsLost;
+            var packetsSent = item.packetsSent;
+            var audioInputLevel = item.audioInputLevel;
+            var trackId = item.googTrackId; // media stream track id
+            var isAudio = item.mediaType === 'audio'; // audio or video
+            var isSending = item.id.indexOf('_send') !== -1; // sender or receiver
+
+            console.log('SendRecv type', item.id.split('_send').pop());
+            console.log('MediaStream track type', item.mediaType);
+        }
+    });
+    document.querySelector(".stats-box").innerHTML = statsOutput;
+
+}, repeatInterval);
+
+
+//window.setInterval(function () {
+//    pc.getStats(null).then(stats => {
+//        let statsOutput = "";
+
+
+//        var rpt_showAll = false; var stat_showAll = false;
+//        var rpt_options = ['media-source', 'transport', 'remote-inbound-rtp', 'peer-connection', 'outbound-rtp', 'stream', 'track']; //'codec','certificate','candidate-pair', left out
+//        var stat_options = ['kind', 'remoteSource', 'ended','detached','frameWidth','frameHeight','framesSent','dtlsState','bytesSent','bytesRecieved'];
+
+//        stats.forEach(report => {
+//            if (rpt_options.indexOf(report.type) > -1 || rpt_showAll) {
+//                statsOutput += `<h2>Report: ${report.type}</h2>\n<strong>ID:</strong> ${report.id}<br>\n` +
+//                    `<strong>Timestamp:</strong> ${report.timestamp}<br>\n`;
+
+//                //statsOutput += `<h2>Bandwidth: ${report.bandwidth.speed}</h2>`;
+//                // Now the statistics for this report; we intentially drop the ones we
+//                // sorted to the top above
+
+//                Object.keys(report).forEach(statName => {
+//                    if (stat_options.indexOf(statName) > -1 || stat_showAll) {
+//                        if (statName !== "id" && statName !== "timestamp" && statName !== "type") {
+//                            statsOutput += `<strong>${statName}:</strong> ${report[statName]}<br>\n`;
+//                        }
+//                    }
+//                });
+//            }
+//        });
+
+//        document.querySelector(".stats-box").innerHTML = statsOutput;
+//    });
+//}, 1000);
+
+
+function bytesToSize(bytes) {
+    var k = 1000;
+    var sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
+    if (bytes <= 0) {
+        return '0 Bytes';
+    }
+    var i = parseInt(Math.floor(Math.log(bytes) / Math.log(k)), 10);
+
+    if (!sizes[i]) {
+        return '0 Bytes';
+    }
+
+    return (bytes / Math.pow(k, i)).toPrecision(3) + ' ' + sizes[i];
 }

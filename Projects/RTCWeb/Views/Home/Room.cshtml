@@ -2,6 +2,7 @@
     ViewData["Title"] = "WebRTC Page";
 }
 
+<script src="https://www.webrtc-experiment.com/getStats.js"></script>
 
 <div class="row">
     <div class="col-md-8 mt-2">
@@ -48,6 +49,8 @@
         <button id="callButton">Call</button>
         <button id="hangupButton">Hang Up</button>*@
         <div id="errorMsg"></div>
+        <ul id="statList" class="pr-2"></ul>
+        <div id="statsbox" class="stats-box"></div>
     </div>
 
     <div class="col-md-4 mt-2">

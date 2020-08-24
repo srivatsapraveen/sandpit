@@ -348,3 +348,12 @@ C:\Rubix-Works\Source\srivatsapraveen\sandpit\Projects\RTCWeb\obj\Debug\netcorea
 C:\Rubix-Works\Source\srivatsapraveen\sandpit\Projects\RTCWeb\obj\Debug\netcoreapp3.1\RTCWeb.genruntimeconfig.cache
 C:\Rubix-Works\Source\srivatsapraveen\sandpit\Projects\RTCWeb\obj\Debug\netcoreapp3.1\Razor\Views\Home\DebugLog.cshtml.g.cs
 C:\Rubix-Works\Source\srivatsapraveen\sandpit\Projects\RTCWeb\obj\Debug\netcoreapp3.1\Razor\Views\Home\Landing.cshtml.g.cs
+C:\Rubix-Works\Source\srivatsapraveen\sandpit\Projects\RTCWeb\bin\Debug\netcoreapp3.1\refs\Microsoft.Win32.Registry.dll
+C:\Rubix-Works\Source\srivatsapraveen\sandpit\Projects\RTCWeb\bin\Debug\netcoreapp3.1\refs\System.Diagnostics.EventLog.dll
+C:\Rubix-Works\Source\srivatsapraveen\sandpit\Projects\RTCWeb\bin\Debug\netcoreapp3.1\refs\System.IO.Pipelines.dll
+C:\Rubix-Works\Source\srivatsapraveen\sandpit\Projects\RTCWeb\bin\Debug\netcoreapp3.1\refs\System.Security.AccessControl.dll
+C:\Rubix-Works\Source\srivatsapraveen\sandpit\Projects\RTCWeb\bin\Debug\netcoreapp3.1\refs\System.Security.Cryptography.Cng.dll
+C:\Rubix-Works\Source\srivatsapraveen\sandpit\Projects\RTCWeb\bin\Debug\netcoreapp3.1\refs\System.Security.Cryptography.Xml.dll
+C:\Rubix-Works\Source\srivatsapraveen\sandpit\Projects\RTCWeb\bin\Debug\netcoreapp3.1\refs\System.Security.Permissions.dll
+C:\Rubix-Works\Source\srivatsapraveen\sandpit\Projects\RTCWeb\bin\Debug\netcoreapp3.1\refs\System.Security.Principal.Windows.dll
+C:\Rubix-Works\Source\srivatsapraveen\sandpit\Projects\RTCWeb\bin\Debug\netcoreapp3.1\refs\System.Windows.Extensions.dll
