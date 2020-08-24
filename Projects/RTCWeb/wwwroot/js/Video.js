@@ -71,7 +71,9 @@ pc.onicecandidate = ({ candidate }) => {
 let makingOffer = false, ignoreOffer = false;
 
 pc.onnegotiationneeded = async () => {
-    debugLog('on onnegotiationneeded:connstate=' + pc.iceConnectionState + '|sigState=' + pc.signalingState );
+    debugLog('onnegotiationneeded');
+    debugLog('iceConnectionState=' + pc.iceConnectionState);
+    debugLog('signalingState=' + pc.signalingState);
     try {
         makingOffer = true;
 
@@ -79,7 +81,7 @@ pc.onnegotiationneeded = async () => {
         if (pc.signalingState !== "stable") return;
         await pc.setLocalDescription(offer);
 
-        await pc.setLocalDescription(await pc.createOffer());
+        //await pc.setLocalDescription(await pc.createOffer());
         debugLog('Sending Offer..');
         //pc.localDescription = setMediaBitrates(pc.localDescription);
         send({ sdp: pc.localDescription });
@@ -413,7 +415,7 @@ getStats(pc, function (result) {
     }
 
     statsOutput += `<div class="row"><div class="col-md-4">`;
-    statsOutput += `<h2>Shared</h2>\n<strong>isOfferer :</strong> ${result.isOfferer}<br>\n`;
+    statsOutput += `<h2>Shared</h2>\n`;
     statsOutput += `<strong>Bandwidth:</strong> ${bytesToSize(result.bandwidth.speed)}<br>\n`;
     statsOutput += `<strong>Audio Latency:</strong> ${result.audio.latency + 'ms'}<br>\n`;
     statsOutput += `<strong>Video Latency:</strong> ${result.video.latency + 'ms'}<br>\n`;
